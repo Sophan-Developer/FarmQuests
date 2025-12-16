@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @name FarmQuests
  * @description A plugin that farms you multiple discord quests in background simultaneously.
  * @version 1.0.5
@@ -19,16 +19,19 @@ const config = {
         //{ title: "On-going", type: "progress", items: [""] }
     ],
     settings: [
-		{ type: "number", id: "checkForNewQuests", name: "Interval to check for new quests(min)", note: "The time (in minutes) to check for new quests", value: 5, min: 1, step: 1 },
-		{ type: "switch", id: "autoStartVideoQuests", name: "Auto-start video quests", note: "Automatically click 'Start Video Quest' when available", value: true, min: 1, step: 1 },
-		{ type: "switch", id: "suppressQuestProgressPill", name: "Hide quest progress pill", note: "Hide the small 'Quest progress' UI element shown while farming", value: true, min: 1, step: 1 },
-		{ type: "number", id: "maxFallbackAttempts", name: "Max fallback attempts", note: "How many fallback heartbeat attempts before forcing completion", value: 30, min: 1, step: 1 },
-		{ type: "number", id: "concurrentFarms", name: "Concurrent farms", note: "Maximum number of quests to farm at the same time", value: 3, min: 1, step: 1 },
-		{ type: "switch", id: "enableVerboseLogging", name: "Verbose logging", note: "Enable verbose debug logs for troubleshooting", value: false },
-        { type: "switch", id: "acceptQuestsAutomatically", name: "Accept Quests Automatically", note: "Whether to accept available quests automatically.", value: true },
-        { type: "switch", id: "showQuestsButtonTitleBar", name: "Show Quests Title Bar", note: "Whether to show the quests button in the title bar.", value: true },
-        { type: "switch", id: "showQuestsButtonSettingsBar", name: "Show Quests Settings Bar", note: "Whether to show the quests button in the settings bar.", value: true },
-        { type: "switch", id: "showQuestsButtonBadges", name: "Show Quests Badges", note: "Whether to show badges on the quests button.", value: true }
+		{ type: "number", id: "checkForNewQuests", name: "Interval to check for new quests(min)", note: "The time (in minutes) to check for new quests", value: 5, min: 1, step: 1, page: 1 },
+		{ type: "switch", id: "autoStartVideoQuests", name: "Auto-start video quests", note: "Automatically click 'Start Video Quest' when available", value: true, page: 1 },
+		{ type: "number", id: "maxFallbackAttempts", name: "Max fallback attempts", note: "How many fallback heartbeat attempts before forcing completion", value: 30, min: 1, step: 1, page: 1 },
+		{ type: "number", id: "concurrentFarms", name: "Concurrent farms", note: "Maximum number of quests to farm at the same time", value: 3, min: 1, step: 1, page: 1 },
+		{ type: "number", id: "delayBetweenFarms", name: "Delay between farms (sec)", note: "Delay in seconds between completing quests", value: 2, min: 0, step: 1, page: 1 },
+		{ type: "switch", id: "enableVerboseLogging", name: "Verbose logging", note: "Enable verbose debug logs for troubleshooting", value: false, page: 2 },
+        { type: "switch", id: "acceptQuestsAutomatically", name: "Accept Quests Automatically", note: "Whether to accept available quests automatically.", value: true, page: 2 },
+        { type: "switch", id: "showQuestsButtonTitleBar", name: "Show Quests Title Bar", note: "Whether to show the quests button in the title bar.", value: true, page: 2 },
+        { type: "switch", id: "showQuestsButtonSettingsBar", name: "Show Quests Settings Bar", note: "Whether to show the quests button in the settings bar.", value: true, page: 2 },
+        { type: "switch", id: "showQuestsButtonBadges", name: "Show Quests Badges", note: "Whether to show badges on the quests button.", value: true, page: 2 },
+        { type: "switch", id: "autoCompleteAllQuests", name: "Auto-complete all quests", note: "Automatically complete all quests without watching videos", value: false, page: 2 },
+        { type: "switch", id: "retryFailedQuests", name: "Retry failed quests", note: "Automatically retry quests that fail to complete", value: true, page: 2 },
+        { type: "switch", id: "questNotifications", name: "Quest notifications", note: "Show notifications when quests are completed", value: true, page: 2 }
     ]
 };
 
@@ -189,7 +192,6 @@ module.exports = class BasePlugin {
 		});
 		this.updateInterval = null;
 		this.autoStartObserver = null;
-		this.suppressObserver = null;
 		this.availableQuests = [];
 		this.farmableQuests = [];
 		this.farmingQuest = new Map();
@@ -202,6 +204,58 @@ module.exports = class BasePlugin {
 		this.GuildChannelStore = GuildChannelStore ?? null;
 		this.DiscordModules = DiscordModules ?? null;
 		this.api = api ?? null;
+	}
+
+	initializeSettings() {
+		try {
+			// Initialize all settings with defaults if missing
+			const defaultSettings = {
+				checkForNewQuests: 5,
+				autoStartVideoQuests: false,
+				maxFallbackAttempts: 30,
+				concurrentFarms: 3,
+				delayBetweenFarms: 2,
+				enableVerboseLogging: false,
+				acceptQuestsAutomatically: true,
+				showQuestsButtonTitleBar: true,
+				showQuestsButtonSettingsBar: true,
+				showQuestsButtonBadges: true,
+				autoCompleteAllQuests: false,
+				retryFailedQuests: true,
+				questNotifications: true
+			};
+			
+			for (const [key, defaultValue] of Object.entries(defaultSettings)) {
+				try {
+					const stored = Data.load(this.meta.name, key);
+					if (typeof stored === 'undefined' || stored === null) {
+						Data.save(this.meta.name, key, defaultValue);
+						const setting = getSetting(key);
+						if (setting) setting.value = defaultValue;
+						this.log(`debug`, `Initialized setting ${key} with default value`, defaultValue);
+					}
+				} catch (e) {
+					this.log(`warn`, `Failed to initialize setting ${key}`, e);
+				}
+			}
+		} catch (e) {
+			console.warn('FarmQuests: initializeSettings failed', e);
+		}
+	}
+
+	log(level = 'info', message, data = null) {
+		const verbose = !!(this.settings.enableVerboseLogging ?? getSetting('enableVerboseLogging')?.value);
+		const prefix = `[FarmQuests]`;
+		
+		if (level === 'debug' && !verbose) return;
+		
+		if (data !== null && typeof data === 'object') {
+			console[level](`${prefix} ${message}`, data);
+		} else if (data !== null) {
+			console[level](`${prefix} ${message}:`, data);
+		} else {
+			console[level](`${prefix} ${message}`);
+		}
 	}
 
 	ensureStores() {
@@ -258,53 +312,6 @@ module.exports = class BasePlugin {
 		}
 	}
 
-	startSuppressProgressUI() {
-		try {
-			if (this.suppressObserver) return;
-
-			const hideMatches = (root = document.body) => {
-				if (!root) return;
-				const walker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT, null, false);
-				let n = walker.currentNode;
-				while (n) {
-					try {
-						const txt = (n.innerText || n.textContent || '').trim();
-						if (txt && /Quest progress/i.test(txt)) {
-							if (n.style) n.style.display = 'none';
-						}
-					} catch (e) { /* ignore */ }
-					n = walker.nextNode();
-				}
-			};
-
-			hideMatches();
-
-			this.suppressObserver = new MutationObserver(mutations => {
-				for (const m of mutations) {
-					for (const node of Array.from(m.addedNodes || [])) {
-						try {
-							if (node.nodeType === Node.ELEMENT_NODE) hideMatches(node);
-						} catch (e) { /* ignore */ }
-					}
-				}
-			});
-			this.suppressObserver.observe(document.body, { childList: true, subtree: true });
-			console.info('FarmQuests: suppressQuestProgressPill enabled');
-		} catch (e) {
-			console.warn('FarmQuests: startSuppressProgressUI failed', e);
-		}
-	}
-
-	stopSuppressProgressUI() {
-		try {
-			if (this.suppressObserver) {
-				this.suppressObserver.disconnect();
-				this.suppressObserver = null;
-				console.info('FarmQuests: suppressQuestProgressPill disabled');
-			}
-		} catch (e) { console.warn('FarmQuests: stopSuppressProgressUI failed', e); }
-	}
-
 	stopAutoStart() {
 		try {
 			if (this.autoStartObserver) {
@@ -318,82 +325,164 @@ module.exports = class BasePlugin {
 
 	getSettingsPanel() {
 		try {
-			const built = UI.buildSettingsPanel && UI.buildSettingsPanel({
-				settings: config.settings,
-				onChange: (...args) => {
-					let id, value;
-					if (args.length >= 3) {
-						id = args[1];
-						value = args[2];
-					} else {
-						[id, value] = args;
-					}
-					try { if (typeof id !== 'undefined') this.settings[id] = value; } catch (e) {}
-					switch (id) {
-						case "checkForNewQuests": this.startInterval(); break;
-						case "autoStartVideoQuests": if (value) this.startAutoStart(); else this.stopAutoStart(); break;
-						case "suppressQuestProgressPill": if (value) this.startSuppressProgressUI(); else this.stopSuppressProgressUI(); break;
-					}
-				}
-			});
-			if (built) return built;
-
-			const container = document.createElement('div');
-			container.style.color = '#fff';
-			container.style.padding = '12px';
-			for (const s of config.settings) {
-				const row = document.createElement('div');
-				row.style.marginBottom = '10px';
-				const label = document.createElement('label');
-				label.style.display = 'block';
-				label.style.fontWeight = '600';
-				label.innerText = s.name || s.id;
-				row.appendChild(label);
-				if (s.note) {
-					const note = document.createElement('div');
-					note.style.fontSize = '12px';
-					note.style.opacity = '0.8';
-					note.innerText = s.note;
-					row.appendChild(note);
-				}
-
-				if (s.type === 'number') {
-					const input = document.createElement('input');
-					input.type = 'number';
-					if (typeof s.min !== 'undefined') input.min = s.min;
-					if (typeof s.step !== 'undefined') input.step = s.step;
-					input.value = this.settings[s.id] ?? s.value ?? '';
-					input.style.marginTop = '6px';
-					input.onchange = () => {
-						const val = Number(input.value);
-						this.settings[s.id] = val;
-						if (s.id === 'checkForNewQuests') this.startInterval();
-					};
-					row.appendChild(input);
-				} else if (s.type === 'switch') {
-					const input = document.createElement('input');
-					input.type = 'checkbox';
-					input.checked = !!(this.settings[s.id] ?? s.value);
-					input.style.marginTop = '6px';
-					input.onchange = () => {
-						const val = !!input.checked;
-						this.settings[s.id] = val;
-						if (s.id === 'suppressQuestProgressPill') {
-							if (val) this.startSuppressProgressUI(); else this.stopSuppressProgressUI();
+			const self = this;
+			let currentPage = 1;
+			
+			const createPagedPanel = () => {
+				const container = document.createElement('div');
+				container.style.color = '#fff';
+				container.style.padding = '12px';
+				
+				// Header
+				const header = document.createElement('div');
+				header.style.marginBottom = '16px';
+				header.style.fontSize = '14px';
+				header.style.fontWeight = '600';
+				header.innerText = `Settings - Page ${currentPage} / 2`;
+				container.appendChild(header);
+				
+				// Settings container
+				const settingsContainer = document.createElement('div');
+				container.appendChild(settingsContainer);
+				
+				// Navigation buttons
+				const navContainer = document.createElement('div');
+				navContainer.style.marginTop = '16px';
+				navContainer.style.display = 'flex';
+				navContainer.style.gap = '8px';
+				navContainer.style.justifyContent = 'space-between';
+				
+				const prevBtn = document.createElement('button');
+				prevBtn.innerText = 'Previous';
+				prevBtn.style.padding = '8px 12px';
+				prevBtn.style.borderRadius = '4px';
+				prevBtn.style.border = '1px solid #72767d';
+				prevBtn.style.backgroundColor = '#2c2f33';
+				prevBtn.style.color = '#fff';
+				prevBtn.style.cursor = 'pointer';
+				prevBtn.style.minWidth = '100px';
+				prevBtn.style.fontWeight = '500';
+				
+				const nextBtn = document.createElement('button');
+				nextBtn.innerText = 'Next';
+				nextBtn.style.padding = '8px 12px';
+				nextBtn.style.borderRadius = '4px';
+				nextBtn.style.border = '1px solid #72767d';
+				nextBtn.style.backgroundColor = '#2c2f33';
+				nextBtn.style.color = '#fff';
+				nextBtn.style.cursor = 'pointer';
+				nextBtn.style.minWidth = '100px';
+				nextBtn.style.fontWeight = '500';
+				
+				const updatePage = () => {
+					settingsContainer.innerHTML = '';
+					header.innerText = `Settings - Page ${currentPage} / 2`;
+					
+					const pageSettings = config.settings.filter(s => s.page === currentPage);
+					
+					for (const s of pageSettings) {
+						const row = document.createElement('div');
+						row.style.marginBottom = '14px';
+						const label = document.createElement('label');
+						label.style.display = 'block';
+						label.style.fontWeight = '600';
+						label.style.marginBottom = '4px';
+						label.innerText = s.name || s.id;
+						row.appendChild(label);
+						
+						if (s.note) {
+							const note = document.createElement('div');
+							note.style.fontSize = '12px';
+							note.style.opacity = '0.7';
+							note.style.marginBottom = '6px';
+							note.innerText = s.note;
+							row.appendChild(note);
 						}
-					};
-					row.appendChild(input);
-				} else {
-					const input = document.createElement('input');
-					input.type = 'text';
-					input.value = this.settings[s.id] ?? s.value ?? '';
-					input.style.marginTop = '6px';
-					input.onchange = () => { this.settings[s.id] = input.value; };
-					row.appendChild(input);
-				}
-				container.appendChild(row);
-			}
-			return container;
+						
+						if (s.type === 'number') {
+							const input = document.createElement('input');
+							input.type = 'number';
+							if (typeof s.min !== 'undefined') input.min = s.min;
+							if (typeof s.step !== 'undefined') input.step = s.step;
+							input.value = self.settings[s.id] ?? s.value ?? '';
+							input.style.width = '100%';
+							input.style.padding = '6px';
+							input.style.borderRadius = '4px';
+							input.style.border = '1px solid #72767d';
+							input.style.backgroundColor = '#2c2f33';
+							input.style.color = '#fff';
+							input.style.boxSizing = 'border-box';
+							input.onchange = () => {
+								const val = Number(input.value);
+								if (!isNaN(val) && val >= (s.min || 1)) {
+									self.settings[s.id] = val;
+									if (s.id === 'checkForNewQuests') self.startInterval();
+								}
+							};
+							row.appendChild(input);
+						} else if (s.type === 'switch') {
+							const input = document.createElement('input');
+							input.type = 'checkbox';
+							input.checked = !!(self.settings[s.id] ?? s.value);
+							input.style.marginRight = '8px';
+							input.style.cursor = 'pointer';
+							input.onchange = () => {
+								const val = !!input.checked;
+								self.settings[s.id] = val;
+								if (s.id === 'autoStartVideoQuests') {
+									if (val) self.startAutoStart(); else self.stopAutoStart();
+								}
+								};
+							row.appendChild(input);
+						} else {
+							const input = document.createElement('input');
+							input.type = 'text';
+							input.value = self.settings[s.id] ?? s.value ?? '';
+							input.style.width = '100%';
+							input.style.padding = '6px';
+							input.style.borderRadius = '4px';
+							input.style.border = '1px solid #72767d';
+							input.style.backgroundColor = '#2c2f33';
+							input.style.color = '#fff';
+							input.style.boxSizing = 'border-box';
+							input.onchange = () => { self.settings[s.id] = input.value; };
+							row.appendChild(input);
+						}
+						
+						settingsContainer.appendChild(row);
+					}
+					
+					prevBtn.disabled = currentPage === 1;
+					nextBtn.disabled = currentPage === 2;
+					prevBtn.style.opacity = currentPage === 1 ? '0.5' : '1';
+					nextBtn.style.opacity = currentPage === 2 ? '0.5' : '1';
+					prevBtn.style.pointerEvents = currentPage === 1 ? 'none' : 'auto';
+					nextBtn.style.pointerEvents = currentPage === 2 ? 'none' : 'auto';
+				};
+				
+				prevBtn.onclick = () => {
+					if (currentPage > 1) {
+						currentPage--;
+						updatePage();
+					}
+				};
+				
+				nextBtn.onclick = () => {
+					if (currentPage < 2) {
+						currentPage++;
+						updatePage();
+					}
+				};
+				
+				navContainer.appendChild(prevBtn);
+				navContainer.appendChild(nextBtn);
+				container.appendChild(navContainer);
+				
+				updatePage();
+				return container;
+			};
+			
+			return createPagedPanel();
 		} catch (e) {
 			console.error('FarmQuests: buildSettingsPanel failed', e);
 			try {
@@ -423,6 +512,7 @@ module.exports = class BasePlugin {
 
 	start() {
 		this.showChangelog();
+		this.initializeSettings();
 		this.ensureStores();
 
 		if (this.RunningGameStore) {
@@ -456,16 +546,12 @@ module.exports = class BasePlugin {
 			if (this.settings.autoStartVideoQuests ?? getSetting('autoStartVideoQuests')?.value) {
 				this.startAutoStart();
 			}
-			if (this.settings.suppressQuestProgressPill ?? getSetting('suppressQuestProgressPill')?.value) {
-				this.startSuppressProgressUI();
-			}
 		} catch (e) { /* ignore */ }
 	}
 
 	stop() {
 		this.stopInterval();
 		this.stopAutoStart();
-		this.stopSuppressProgressUI();
 		Patcher.unpatchAll(this.meta.name);
 	}
 
@@ -538,12 +624,12 @@ module.exports = class BasePlugin {
 			const withUserStatus = this.availableQuests.filter(q => !!q.userStatus).length;
 			const withEnrolled = this.availableQuests.filter(q => isEnrolled(q.userStatus)).length;
 			const withCompleted = this.availableQuests.filter(q => isCompleted(q.userStatus)).length;
-			console.log(`FarmQuests: found ${total} quests (userStatus: ${withUserStatus}, enrolled: ${withEnrolled}, completed: ${withCompleted}). Farmable: ${this.farmableQuests.length}`);
+			this.log('info', `Found ${total} quests (userStatus: ${withUserStatus}, enrolled: ${withEnrolled}, completed: ${withCompleted}). Farmable: ${this.farmableQuests.length}`);
 			const verbose = !!(this.settings.enableVerboseLogging ?? getSetting('enableVerboseLogging')?.value);
 			if (this.farmableQuests.length === 0) {
 				if (verbose) {
-					console.debug("FarmQuests: sample available quest keys:", (this.availableQuests[0] && Object.keys(this.availableQuests[0]).slice(0,20)) || []);
-					console.debug("FarmQuests: sample userStatus keys:", (this.availableQuests[0]?.userStatus && Object.keys(this.availableQuests[0].userStatus).slice(0,20)) || []);
+					this.log('debug', "Sample available quest keys:", (this.availableQuests[0] && Object.keys(this.availableQuests[0]).slice(0,20)) || []);
+					this.log('debug', "Sample userStatus keys:", (this.availableQuests[0]?.userStatus && Object.keys(this.availableQuests[0].userStatus).slice(0,20)) || []);
 				}
 			}
 
@@ -581,93 +667,100 @@ module.exports = class BasePlugin {
 		// Attempt to complete video quests without actually watching the video
 		async completeWithoutWatch(quest) {
 			try {
-				if (!quest || !quest.id) return;
-				this.ensureStores();
-				const store = this.QuestsStore ?? getQuestsStore();
-				const tryCall = async (fnName, ...args) => {
-					try {
-						if (store && typeof store[fnName] === 'function') {
-							console.info(`FarmQuests: calling QuestsStore.${fnName}`);
-							return await store[fnName](...args);
-						}
-					} catch (e) { console.warn('FarmQuests: error calling store method', fnName, e); }
-					return null;
-				};
-
-				await tryCall('enroll', quest.id);
-				await tryCall('submitQuestProgress', quest.id, { progress: 1 });
-				await tryCall('markCompleted', quest.id);
-				await tryCall('claimReward', quest.id);
-
-				try {
-					let target = null;
-					if (store) {
-						if (store.quests && typeof store.quests.get === 'function') {
-							target = store.quests.get(quest.id) || Array.from(store.quests.values()).find(q => q && q.id === quest.id);
-						} else if (typeof store.getAll === 'function') {
-							const all = store.getAll();
-							target = Array.isArray(all) ? all.find(q => q && q.id === quest.id) : null;
-						} else if (Array.isArray(store)) {
-							target = store.find(q => q && q.id === quest.id);
-						}
-						if (target) {
-							target.userStatus = target.userStatus || {};
-							target.userStatus.completedAt = Date.now();
-							if (!target.userStatus.progress) target.userStatus.progress = {};
-							for (const k of Object.keys(target.userStatus.progress || {})) {
-								try { target.userStatus.progress[k].value = target.config?.taskConfig?.tasks?.[k]?.target ?? target.userStatus.progress[k].value ?? 0; } catch(e){}
-							}
-							console.info('FarmQuests: marked quest as completed in-store', quest.id);
-							try {
-								if (this.DiscordModules && typeof this.DiscordModules.dispatch === 'function') {
-									this.DiscordModules.dispatch({ type: 'FARMQUESTS_QUEST_UPDATED', questId: quest.id });
-								}
-							} catch (e) { /* ignore */ }
-						}
-					}
-				} catch (e) { console.warn('FarmQuests: fallback mutation failed', e); }
-
-				try {
-					if (this.api) {
-						const paths = [
-							`/quests/${quest.id}/complete`,
-							`/rewards/quests/${quest.id}/claim`,
-							`/quests/${quest.id}/claim`
-						];
-						for (const p of paths) {
-							try {
-								if (typeof this.api.post === 'function') {
-									await this.api.post(p, {});
-									console.info('FarmQuests: attempted api.post', p);
-									break;
-								}
-								if (typeof this.api.fetch === 'function') {
-									await this.api.fetch(p, { method: 'POST' });
-									console.info('FarmQuests: attempted api.fetch', p);
-									break;
-								}
-							} catch (e) { /* ignore individual path errors */ }
-						}
-					}
-				} catch (e) { /* ignore */ }
-
-				if (this.farmingQuest && this.farmingQuest.has(quest.id)) this.farmingQuest.delete(quest.id);
-				console.log('FarmQuests: completeWithoutWatch finished for', quest.id);
-			} catch (err) {
-				console.error('FarmQuests: completeWithoutWatch failed', err);
+			if (!quest || !quest.id) {
+				this.log('warn', "Invalid quest passed to completeWithoutWatch");
+				return;
 			}
+			this.ensureStores();
+			const store = this.QuestsStore ?? getQuestsStore();
+			const tryCall = async (fnName, ...args) => {
+				try {
+					if (store && typeof store[fnName] === 'function') {
+						this.log('debug', `Calling QuestsStore.${fnName}`);
+						return await store[fnName](...args);
+					}
+				} catch (e) { 
+					this.log('debug', `Error calling store method ${fnName}`, e.message);
+				}
+				return null;
+			};
+
+			await tryCall('enroll', quest.id);
+			await tryCall('submitQuestProgress', quest.id, { progress: 1 });
+			await tryCall('markCompleted', quest.id);
+			await tryCall('claimReward', quest.id);
+
+			try {
+				let target = null;
+				if (store) {
+					if (store.quests && typeof store.quests.get === 'function') {
+						target = store.quests.get(quest.id) || Array.from(store.quests.values()).find(q => q && q.id === quest.id);
+					} else if (typeof store.getAll === 'function') {
+						const all = store.getAll();
+						target = Array.isArray(all) ? all.find(q => q && q.id === quest.id) : null;
+					} else if (Array.isArray(store)) {
+						target = store.find(q => q && q.id === quest.id);
+					}
+					if (target) {
+						target.userStatus = target.userStatus || {};
+						target.userStatus.completedAt = Date.now();
+						if (!target.userStatus.progress) target.userStatus.progress = {};
+						for (const k of Object.keys(target.userStatus.progress || {})) {
+							try { target.userStatus.progress[k].value = target.config?.taskConfig?.tasks?.[k]?.target ?? target.userStatus.progress[k].value ?? 0; } catch(e){}
+						}
+						this.log('info', `Marked quest as completed in-store`, quest.id);
+						try {
+							if (this.DiscordModules && typeof this.DiscordModules.dispatch === 'function') {
+								this.DiscordModules.dispatch({ type: 'FARMQUESTS_QUEST_UPDATED', questId: quest.id });
+							}
+						} catch (e) { /* ignore */ }
+					}
+				}
+			} catch (e) { 
+				this.log('warn', 'Fallback mutation failed', e.message);
+			}
+
+			try {
+				if (this.api) {
+					const paths = [
+						`/quests/${quest.id}/complete`,
+						`/rewards/quests/${quest.id}/claim`,
+						`/quests/${quest.id}/claim`
+					];
+					for (const p of paths) {
+						try {
+							if (typeof this.api.post === 'function') {
+								await this.api.post(p, {});
+								this.log('debug', 'API POST successful', p);
+								break;
+							}
+							if (typeof this.api.fetch === 'function') {
+								await this.api.fetch(p, { method: 'POST' });
+								this.log('debug', 'API fetch successful', p);
+								break;
+							}
+						} catch (e) { /* ignore individual path errors */ }
+					}
+				}
+			} catch (e) { /* ignore */ }
+
+			if (this.farmingQuest && this.farmingQuest.has(quest.id)) this.farmingQuest.delete(quest.id);
+			this.log('info', 'completeWithoutWatch finished', quest.id);
+		} catch (err) {
+			this.log('error', 'completeWithoutWatch failed', err.message);
 		}
+	}
 
 	farmQuest(quest) {
 		try {
 			let isApp = typeof DiscordNative !== "undefined";
 			if (!quest) {
-				console.log("You don't have any uncompleted quests!");
+				this.log('warn', "No uncompleted quests available");
 				return;
 			}
 
 			if (!api) {
-				console.warn("FarmQuests: API module not available — some operations may fail.");
+				this.log('warn', "API module not available â€” some operations may fail");
 			}
 
 			const pid = Math.floor(Math.random() * 30000) + 1000;
@@ -676,7 +769,7 @@ module.exports = class BasePlugin {
 			const questName = quest?.config?.messages?.questName ?? "Unknown Quest";
 			const taskConfig = quest?.config?.taskConfig ?? quest?.config?.taskConfigV2;
 			if (!taskConfig || !taskConfig.tasks) {
-				console.error("FarmQuests: invalid taskConfig for quest", quest?.id, quest);
+				this.log('error', "Invalid taskConfig for quest", { questId: quest?.id });
 				this.farmingQuest.set(quest.id, false);
 				return;
 			}

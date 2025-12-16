@@ -8,5 +8,9 @@
     "acceptQuestsAutomatically": true,
     "showQuestsButtonTitleBar": true,
     "showQuestsButtonSettingsBar": true,
-    "showQuestsButtonBadges": true
+    "showQuestsButtonBadges": true,
+    "delayBetweenFarms": 2,
+    "autoCompleteAllQuests": true,
+    "retryFailedQuests": true,
+    "questNotifications": true
 }

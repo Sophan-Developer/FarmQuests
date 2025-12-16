@@ -39,15 +39,17 @@ A BetterDiscord plugin that automatically farms multiple Discord quests in the b
 |---------|------|---------|-------------|
 | **Interval to check for new quests (min)** | Number | 5 | How often (in minutes) the plugin checks for new quests |
 | **Auto-start video quests** | Toggle | ON | Automatically click "Start Video Quest" when available |
-| **Hide quest progress pill** | Toggle | ON | Hide the floating "Quest progress" UI element while farming |
+| **Max fallback attempts** | Number | 30 | Maximum number of retry attempts before forcing quest completion |
+| **Concurrent farms** | Number | 3 | Maximum number of quests to farm simultaneously |
 
 ### Advanced Settings
 
 | Setting | Type | Default | Description |
 |---------|------|---------|-------------|
-| **Max fallback attempts** | Number | 30 | Maximum number of retry attempts before forcing quest completion |
-| **Concurrent farms** | Number | 3 | Maximum number of quests to farm simultaneously |
+| **Delay between farms (sec)** | Number | 2 | Delay in seconds between completing quests |
 | **Verbose logging** | Toggle | OFF | Enable detailed debug logs in the console |
+| **Auto-complete all quests** | Toggle | OFF | Automatically complete all quests without watching videos |
+| **Retry failed quests** | Toggle | ON | Automatically retry quests that fail to complete |
 
 ### UI Settings
 
@@ -56,8 +58,7 @@ A BetterDiscord plugin that automatically farms multiple Discord quests in the b
 | **Accept Quests Automatically** | Toggle | ON | Auto-accept available quests (when implemented) |
 | **Show Quests Title Bar** | Toggle | ON | Display quests button in the title bar |
 | **Show Quests Settings Bar** | Toggle | ON | Display quests button in settings bar |
-| **Show Quests Badges** | Toggle | ON | Show badges on quest buttons |
-
+| **Show Quests Badges** | Toggle | ON | Show badges on quest buttons || **Quest Notifications** | Toggle | ON | Show notifications when quests are completed |
 ## How It Works
 
 ### Quest Detection
@@ -85,21 +86,32 @@ If standard completion fails:
 
 ### Plugin doesn't detect quests
 - Ensure you have **enrolled** in at least one quest manually
-- Check the console (`Ctrl+Shift+I`) for error messages
+- Check the console (`Ctrl+Shift+I`) for error messages with the `[FarmQuests]` prefix
 - Enable **Verbose logging** to see detailed debug output
+- Plugin initializes all settings on first load – check `FarmQuests.config.json` was created
 
 ### Quests not completing
 - Check if Discord is in focus (some operations require focus)
 - For `PLAY_ON_DESKTOP` quests, ensure you're using the desktop app
 - For `STREAM_ON_DESKTOP` quests, you need at least 1 other person in the VC
 - Verify the quest hasn't expired
+- Check **Max fallback attempts** setting – increase if quests are timing out (default: 30)
+
+### Settings not saving
+- Verify `FarmQuests.config.json` exists in the plugins folder
+- Check that settings are valid (e.g., numbers >= 1)
+- The plugin has automatic setting initialization that runs on startup
+- Try toggling a setting – if it updates `config.json`, the plugin is working
+- Clear your browser cache and reload Discord (`Ctrl+R`)
 
 ### Console errors
-Run the following in DevTools console to check module resolution:
+- Look for messages starting with `[FarmQuests]` (new unified logging)
+- Enable **Verbose logging** to see detailed operation traces
+- For missing stores, run this in DevTools:
 ```javascript
 Webpack.getModule(m=>Object.keys(m||{}).slice(0,10)).slice(0,20)
 ```
-Paste the output if you need help debugging.
+- If API module is missing, basic quest completion should still work via store methods
 
 ## API Support
 
