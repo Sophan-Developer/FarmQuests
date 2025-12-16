@@ -22,19 +22,16 @@ const config = {
 		{ type: "number", id: "checkForNewQuests", name: "Interval to check for new quests(min)", note: "The time (in minutes) to check for new quests", value: 5, min: 1, step: 1 },
 		{ type: "switch", id: "autoStartVideoQuests", name: "Auto-start video quests", note: "Automatically click 'Start Video Quest' when available", value: true, min: 1, step: 1 },
 		{ type: "switch", id: "suppressQuestProgressPill", name: "Hide quest progress pill", note: "Hide the small 'Quest progress' UI element shown while farming", value: true, min: 1, step: 1 },
-
-		// new settings
 		{ type: "number", id: "maxFallbackAttempts", name: "Max fallback attempts", note: "How many fallback heartbeat attempts before forcing completion", value: 30, min: 1, step: 1 },
 		{ type: "number", id: "concurrentFarms", name: "Concurrent farms", note: "Maximum number of quests to farm at the same time", value: 3, min: 1, step: 1 },
 		{ type: "switch", id: "enableVerboseLogging", name: "Verbose logging", note: "Enable verbose debug logs for troubleshooting", value: false },
-
-		// added per request
         { type: "switch", id: "acceptQuestsAutomatically", name: "Accept Quests Automatically", note: "Whether to accept available quests automatically.", value: true },
         { type: "switch", id: "showQuestsButtonTitleBar", name: "Show Quests Title Bar", note: "Whether to show the quests button in the title bar.", value: true },
         { type: "switch", id: "showQuestsButtonSettingsBar", name: "Show Quests Settings Bar", note: "Whether to show the quests button in the settings bar.", value: true },
         { type: "switch", id: "showQuestsButtonBadges", name: "Show Quests Badges", note: "Whether to show badges on the quests button.", value: true }
     ]
 };
+
 function getSetting(key) {
     return config.settings.reduce((found, setting) => found ? found : (setting.id === key ? setting : setting.settings?.find(s => s.id === key)), undefined)
 }
@@ -73,36 +70,29 @@ try {
 } catch (e) { /* ignore */ }
 const api = apiModule?.tn ?? null;
 
-// safer QuestsStore resolver — no heavy module enumeration and guards against throwers
 let _cachedQuestsStore = null;
 function getQuestsStore() {
     if (_cachedQuestsStore) return _cachedQuestsStore;
 
-    // if static constant exists, use it
     if (typeof QuestsStore !== "undefined" && QuestsStore) {
         _cachedQuestsStore = QuestsStore;
         return _cachedQuestsStore;
     }
 
-    // try chunk resolver (desktop)
     const chunk = resolveStoresFromChunk();
     if (chunk?.QuestsStore) {
         _cachedQuestsStore = chunk.QuestsStore;
-        // also patch module-level fallbacks for API and stores so other code uses them when available
         if (!api && chunk.api) {
-            // warning: this rebinds the top-level api variable, safe only as a fallback
             try { Object.defineProperty(window, "chunkApi", { value: chunk.api, configurable: true }) } catch(e){/*ignore*/}
         }
         return _cachedQuestsStore;
     }
 
-    // safe filter helper (wrap checks in try/catch)
     const safeCheck = (m) => {
         try {
             if (!m) return false;
             const t = typeof m;
             if (t !== "object" && t !== "function") return false;
-            // common shapes: quests map, getter methods or keys containing "quest"
             if (m.quests) return true;
             if (typeof m.getAll === "function" || typeof m.getQuests === "function") return true;
             const keys = Object.keys(m || {});
@@ -112,7 +102,6 @@ function getQuestsStore() {
         }
     };
 
-    // try a few safe lookups via Webpack.getModule
     try {
         const byProps = Webpack.getModule?.(safeCheck);
         if (byProps) {
@@ -120,7 +109,6 @@ function getQuestsStore() {
             return _cachedQuestsStore;
         }
 
-        // fallback to a bulk store-name lookup
         const maybe = Webpack.getBulk(
             { filter: Filters.byStoreName("QuestsStore") },
             { filter: Filters.byStoreName("QuestStore") },
@@ -135,19 +123,16 @@ function getQuestsStore() {
         console.warn("FarmQuests: error while searching for QuestsStore", err);
     }
 
-    // give up without throwing
     _cachedQuestsStore = null;
     return null;
 }
 
-// add a safe resolver for desktop builds using webpackChunkdiscord_app (the snippet you pasted)
 let _chunkStores = null;
 function resolveStoresFromChunk() {
 	try {
 		if (typeof webpackChunkdiscord_app === "undefined") return null;
 		if (_chunkStores) return _chunkStores;
 
-		// get internal require cache (desktop)
 		delete window.$;
 		const wpRequire = webpackChunkdiscord_app.push([[Symbol()], {}, r => r]);
 		webpackChunkdiscord_app.pop();
@@ -203,18 +188,13 @@ module.exports = class BasePlugin {
 			}
 		});
 		this.updateInterval = null;
-
 		this.autoStartObserver = null;
 		this.suppressObserver = null;
-
 		this.availableQuests = [];
 		this.farmableQuests = [];
-
 		this.farmingQuest = new Map();
 		this.fakeGames = new Map();
 		this.fakeApplications = new Map();
-
-		// instance-level resolved modules (fallbackable)
 		this.RunningGameStore = RunningGameStore ?? null;
 		this.ApplicationStreamingStore = ApplicationStreamingStore ?? null;
 		this.QuestsStore = QuestsStore ?? null;
@@ -224,7 +204,6 @@ module.exports = class BasePlugin {
 		this.api = api ?? null;
 	}
 
-	// ensure instance stores are resolved (uses chunk fallback when necessary)
 	ensureStores() {
 		try {
 			const chunk = resolveStoresFromChunk() ?? {};
@@ -268,7 +247,6 @@ module.exports = class BasePlugin {
 				}
 			};
 
-			// initial pass
 			clickStartButtons();
 
 			this.autoStartObserver = new MutationObserver(() => {
@@ -299,7 +277,6 @@ module.exports = class BasePlugin {
 				}
 			};
 
-			// initial hide pass
 			hideMatches();
 
 			this.suppressObserver = new MutationObserver(mutations => {
@@ -341,7 +318,6 @@ module.exports = class BasePlugin {
 
 	getSettingsPanel() {
 		try {
-			// Prefer API-built panel if available
 			const built = UI.buildSettingsPanel && UI.buildSettingsPanel({
 				settings: config.settings,
 				onChange: (...args) => {
@@ -362,7 +338,6 @@ module.exports = class BasePlugin {
 			});
 			if (built) return built;
 
-			// Fallback: build a simple settings panel DOM when BdApi.UI is missing
 			const container = document.createElement('div');
 			container.style.color = '#fff';
 			container.style.padding = '12px';
@@ -409,7 +384,6 @@ module.exports = class BasePlugin {
 					};
 					row.appendChild(input);
 				} else {
-					// generic text fallback
 					const input = document.createElement('input');
 					input.type = 'text';
 					input.value = this.settings[s.id] ?? s.value ?? '';
@@ -451,7 +425,6 @@ module.exports = class BasePlugin {
 		this.showChangelog();
 		this.ensureStores();
 
-		// only patch if resolved stores exist to avoid errors
 		if (this.RunningGameStore) {
 			Patcher.instead(this.meta.name, this.RunningGameStore, "getRunningGames", (thisObject, args, originalFunction) => {
 				if (this.fakeGames.size > 0) {
@@ -479,7 +452,6 @@ module.exports = class BasePlugin {
 
 		this.updateQuests();
 		this.startInterval();
-		// initialize settings-based features
 		try {
 			if (this.settings.autoStartVideoQuests ?? getSetting('autoStartVideoQuests')?.value) {
 				this.startAutoStart();
@@ -499,7 +471,6 @@ module.exports = class BasePlugin {
 
 	startInterval() {
 		this.stopInterval();
-		// parse and validate interval safely
 		const raw = this.settings.checkForNewQuests ?? getSetting("checkForNewQuests")?.value ?? 5;
 		const minutes = Math.max(1, Number(raw) || 5);
 		this.updateInterval = setInterval(() => {
@@ -516,7 +487,6 @@ module.exports = class BasePlugin {
 
 	updateQuests() {
 		try {
-			// prefer instance QuestsStore, then resolver
 			const store = this.QuestsStore ?? getQuestsStore();
 			if (!store) {
 				console.error("FarmQuests: QuestsStore not found. If you see this repeatedly, run in console: Webpack.getModule(m=>Object.keys(m||{}).slice(0,10)).slice(0,20) and paste output.");
@@ -542,7 +512,6 @@ module.exports = class BasePlugin {
 
 			this.availableQuests = questsList || [];
 
-			// relaxed enrolled/completed detection (supports different key names)
 			const isEnrolled = (u) => {
 				if (!u) return false;
 				return !!(u.enrolledAt || u.enrolled_at || u.enrolled || u.enrolledAt === 0);
@@ -565,7 +534,6 @@ module.exports = class BasePlugin {
 				}
 			});
 
-			// debug output: counts and small sample so you can paste back if needed
 			const total = this.availableQuests.length;
 			const withUserStatus = this.availableQuests.filter(q => !!q.userStatus).length;
 			const withEnrolled = this.availableQuests.filter(q => isEnrolled(q.userStatus)).length;
@@ -587,7 +555,6 @@ module.exports = class BasePlugin {
 						this.farmingQuest.delete(quest.id);
 					}
 				} else {
-					// enforce concurrent farm limit
 					const activeCount = Array.from(this.farmingQuest.values()).filter(v => v === true).length;
 					if (activeCount >= concurrentLimit) {
 						if (verbose) console.info(`FarmQuests: concurrent limit reached (${activeCount}/${concurrentLimit}), deferring quest ${quest.id}`);
@@ -617,7 +584,6 @@ module.exports = class BasePlugin {
 				if (!quest || !quest.id) return;
 				this.ensureStores();
 				const store = this.QuestsStore ?? getQuestsStore();
-				// If the store exposes helper methods, try them first
 				const tryCall = async (fnName, ...args) => {
 					try {
 						if (store && typeof store[fnName] === 'function') {
@@ -633,7 +599,6 @@ module.exports = class BasePlugin {
 				await tryCall('markCompleted', quest.id);
 				await tryCall('claimReward', quest.id);
 
-				// Best-effort direct mutation fallback
 				try {
 					let target = null;
 					if (store) {
@@ -649,12 +614,10 @@ module.exports = class BasePlugin {
 							target.userStatus = target.userStatus || {};
 							target.userStatus.completedAt = Date.now();
 							if (!target.userStatus.progress) target.userStatus.progress = {};
-							// attempt to set progress values if task keys exist
 							for (const k of Object.keys(target.userStatus.progress || {})) {
 								try { target.userStatus.progress[k].value = target.config?.taskConfig?.tasks?.[k]?.target ?? target.userStatus.progress[k].value ?? 0; } catch(e){}
 							}
 							console.info('FarmQuests: marked quest as completed in-store', quest.id);
-							// notify via dispatcher if available
 							try {
 								if (this.DiscordModules && typeof this.DiscordModules.dispatch === 'function') {
 									this.DiscordModules.dispatch({ type: 'FARMQUESTS_QUEST_UPDATED', questId: quest.id });
@@ -664,10 +627,8 @@ module.exports = class BasePlugin {
 					}
 				} catch (e) { console.warn('FarmQuests: fallback mutation failed', e); }
 
-				// Try API-like endpoints if an api wrapper was resolved
 				try {
 					if (this.api) {
-						// common endpoint guesses
 						const paths = [
 							`/quests/${quest.id}/complete`,
 							`/rewards/quests/${quest.id}/claim`,
@@ -690,7 +651,6 @@ module.exports = class BasePlugin {
 					}
 				} catch (e) { /* ignore */ }
 
-				// cleanup farming state
 				if (this.farmingQuest && this.farmingQuest.has(quest.id)) this.farmingQuest.delete(quest.id);
 				console.log('FarmQuests: completeWithoutWatch finished for', quest.id);
 			} catch (err) {
@@ -699,7 +659,6 @@ module.exports = class BasePlugin {
 		}
 
 	farmQuest(quest) {
-		// defensive checks and more logging for easier debugging
 		try {
 			let isApp = typeof DiscordNative !== "undefined";
 			if (!quest) {
@@ -743,7 +702,6 @@ module.exports = class BasePlugin {
 			switch (taskName) {
 				case "WATCH_VIDEO":
 				case "WATCH_VIDEO_ON_MOBILE":
-					// Complete video quests without watching by attempting store/api claim
 					this.completeWithoutWatch(quest);
 					break;
 
@@ -794,7 +752,6 @@ module.exports = class BasePlugin {
 							}
 							(this.DiscordModules ?? DiscordModules)?.subscribe("QUESTS_SEND_HEARTBEAT_SUCCESS", playOnDesktop);
 
-							// fallback: if heartbeats don't arrive via DiscordModules, try advancing progress via store/api
 							let fallbackInterval = null;
 							let fallbackAttempts = 0;
 							const startFallback = () => {
@@ -804,11 +761,9 @@ module.exports = class BasePlugin {
 										if (!this.farmingQuest.get(quest.id)) return;
 										this.ensureStores();
 										const qs = this.QuestsStore ?? getQuestsStore();
-										// try store helper first
 										if (qs && typeof qs.submitQuestProgress === 'function') {
 											await qs.submitQuestProgress(quest.id, { progress: 1 });
 										} else if (qs && typeof qs.enroll === 'function') {
-											// best-effort enroll/mark progress
 											await qs.enroll(quest.id).catch(()=>{});
 										} else if (this.api ?? api) {
 											try {
@@ -816,9 +771,7 @@ module.exports = class BasePlugin {
 											} catch(e){ /* ignore */ }
 										}
 
-										// re-evaluate progress from store if available
 										let current = quest.userStatus?.progress?.PLAY_ON_DESKTOP?.value ?? quest.userStatus?.streamProgressSeconds ?? 0;
-										// if store is accessible try to read latest
 										if (qs) {
 											try {
 												let target = null;
@@ -833,7 +786,6 @@ module.exports = class BasePlugin {
 
 										fallbackAttempts++;
 
-										// If progress reached target or close to it, or retries exhausted, force-complete
 										const nearComplete = current >= Math.floor(secondsNeeded * 0.9);
 										const maxFallback = Math.max(1, Number(this.settings.maxFallbackAttempts ?? getSetting('maxFallbackAttempts')?.value ?? 30));
 										const exhausted = fallbackAttempts >= maxFallback;
@@ -861,7 +813,6 @@ module.exports = class BasePlugin {
 								}, 20 * 1000);
 							};
 
-							// start fallback mechanism
 							startFallback();
 
 							console.log(`Spoofed your game to ${applicationName}. Wait for ${Math.ceil((secondsNeeded - secondsDone) / 60)} more minutes.`);
@@ -901,7 +852,6 @@ module.exports = class BasePlugin {
 						break;
 
 					case "PLAY_ACTIVITY":
-						// get a voice channel id defensively
 						let channelId = null;
 						try {
 							const privateChannels = (this.ChannelStore?.getSortedPrivateChannels?.() ?? this.ChannelStore?.getSortedPrivateChannels ?? ChannelStore?.getSortedPrivateChannels?.() ?? ChannelStore?.getSortedPrivateChannels) ?? [];
