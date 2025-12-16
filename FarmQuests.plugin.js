@@ -355,7 +355,8 @@ module.exports = class BasePlugin {
 					try { if (typeof id !== 'undefined') this.settings[id] = value; } catch (e) {}
 					switch (id) {
 						case "checkForNewQuests": this.startInterval(); break;
-						// removed: suppressQuestProgressPill handling (setting was deleted)
+						case "autoStartVideoQuests": if (value) this.startAutoStart(); else this.stopAutoStart(); break;
+						case "suppressQuestProgressPill": if (value) this.startSuppressProgressUI(); else this.stopSuppressProgressUI(); break;
 					}
 				}
 			});
@@ -478,7 +479,15 @@ module.exports = class BasePlugin {
 
 		this.updateQuests();
 		this.startInterval();
-		// removed checks for deleted settings (autoStartVideoQuests and suppressQuestProgressPill)
+		// initialize settings-based features
+		try {
+			if (this.settings.autoStartVideoQuests ?? getSetting('autoStartVideoQuests')?.value) {
+				this.startAutoStart();
+			}
+			if (this.settings.suppressQuestProgressPill ?? getSetting('suppressQuestProgressPill')?.value) {
+				this.startSuppressProgressUI();
+			}
+		} catch (e) { /* ignore */ }
 	}
 
 	stop() {
