@@ -1,0 +1,12 @@
+{
+    "checkForNewQuests": 10,
+    "autoStartVideoQuests": false,
+    "suppressQuestProgressPill": true,
+    "maxFallbackAttempts": 30,
+    "concurrentFarms": 3,
+    "enableVerboseLogging": false,
+    "acceptQuestsAutomatically": true,
+    "showQuestsButtonTitleBar": true,
+    "showQuestsButtonSettingsBar": true,
+    "showQuestsButtonBadges": true
+}
