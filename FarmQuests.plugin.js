@@ -4,9 +4,9 @@
  * @version 1.0.5
  * @author Sophan-Developer
  * @authorLink https://github.com/Sophan-Developer
- * @website https://github.com/xenoncolt/AutoQuestComplete
- * @source https://raw.githubusercontent.com/xenoncolt/AutoQuestComplete/main/AutoQuestComplete.plugin.js
- * @invite blingofcity
+ * @website https://github.com/Sophan-Developer/FarmQuests
+ * @source https://raw.githubusercontent.com/Sophan-Developer/FarmQuests/main/FarmQuests.plugin.js
+ * @invite guNEKzhk4n
  */
 
 // Porting of https://gist.github.com/aamiaa/204cd9d42013ded9faf646fae7f89fbb for betterdiscord
