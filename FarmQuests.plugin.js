@@ -263,6 +263,12 @@ module.exports = class BasePlugin {
 		this.farmingQuest = new Map();
 		this.fakeGames = new Map();
 		this.fakeApplications = new Map();
+		// Load previously failed quest IDs from storage (persist across reloads)
+		const savedFailedQuests = BdApi.Data.load(this.meta.name, 'failedClaimQuests') || [];
+		this.failedClaimQuests = new Set(savedFailedQuests); // Track quests that failed with 400 (manual claim required)
+		if (savedFailedQuests.length > 0) {
+			this.log('info', `Loaded ${savedFailedQuests.length} quest(s) that require manual claim from storage`);
+		}
 		
 		// Cleanup registry for intervals, timeouts, and subscriptions
 		this._cleanupRegistry = {
@@ -972,6 +978,7 @@ module.exports = class BasePlugin {
 		this.farmingQuest.clear();
 		this.fakeGames.clear();
 		this.fakeApplications.clear();
+		this.failedClaimQuests.clear();
 		
 		// Cleanup all registered intervals
 		if (this._cleanupRegistry?.intervals) {
@@ -1119,6 +1126,12 @@ module.exports = class BasePlugin {
 			let claimedCount = 0;
 			for (const quest of completedQuests) {
 				try {
+					// Skip quests that previously failed with 400 (manual claim required)
+					if (this.failedClaimQuests && this.failedClaimQuests.has(quest.id)) {
+						this.log('debug', `Skipping quest ${quest.id} - requires manual claim (API deprecated)`);
+						continue;
+					}
+					
 					this.log('info', `Claiming quest: ${quest.config?.messages?.questName || quest.id}`);
 					const success = await this.claimQuestRewards(quest);
 					if (success) {
@@ -1498,6 +1511,9 @@ module.exports = class BasePlugin {
                 return true;
             }
 
+            let claimAttempted = false;
+            let apiError = null;
+
             // Method 1: Use FluxDispatcher action (most reliable for modern Discord)
             if (this.FluxDispatcher) {
                 try {
@@ -1506,6 +1522,7 @@ module.exports = class BasePlugin {
                         type: 'QUEST_CLAIM_REWARD',
                         questId: quest.id
                     });
+                    claimAttempted = true;
                     
                     // Wait for action to process
                     await new Promise(resolve => setTimeout(resolve, 2000));
@@ -1527,6 +1544,7 @@ module.exports = class BasePlugin {
                 try {
                     this.log('debug', 'Attempting claim via store.claimReward');
                     await store.claimReward(quest.id);
+                    claimAttempted = true;
                     
                     await new Promise(resolve => setTimeout(resolve, 2000));
                     const verification = await this.verifyQuestCompleted(quest.id);
@@ -1540,15 +1558,16 @@ module.exports = class BasePlugin {
                 }
             }
 
-            // Method 3: Direct API call (fallback - may not work with new Discord API)
+            // Method 3: Direct API call (likely broken in current Discord version - avoid if possible)
             if (this.api ?? api) {
                 const apiInstance = this.api ?? api;
                 try {
-                    this.log('debug', 'Attempting claim via direct API call');
+                    this.log('debug', 'Attempting claim via direct API call (may be deprecated)');
                     const response = await apiInstance.post({
                         url: `/quests/${quest.id}/claim-reward`,
                         body: {}
                     });
+                    claimAttempted = true;
                     
                     if (response && (response.ok || response.status === 200)) {
                         await new Promise(resolve => setTimeout(resolve, 2000));
@@ -1560,14 +1579,24 @@ module.exports = class BasePlugin {
                         }
                     }
                 } catch (e) {
-                    // 404/400 errors are expected if Discord changed the API - log as debug not error
-                    if (e.status === 404 || e.status === 400) {
-                        this.log('debug', `API claim endpoint returned ${e.status} - Discord may have changed the claiming flow`);
+                    apiError = e;
+                    // 400 Bad Request means endpoint is invalid/deprecated - don't retry
+                    if (e.status === 400) {
+                        this.log('warn', `Quest ${quest.id}: API endpoint returned 400 - Discord may have changed the claiming system. Manual claim required.`);
+                        // Remember this quest requires manual claim to avoid future attempts
+                        if (this.failedClaimQuests) {
+                            this.failedClaimQuests.add(quest.id);
+                            // Persist to storage so it survives plugin reloads
+                            BdApi.Data.save(this.meta.name, 'failedClaimQuests', Array.from(this.failedClaimQuests));
+                        }
+                        UI.showToast(`Quest "${quest.config?.messages?.questName || 'Quest'}" completed but requires manual claim`, { type: 'warning', timeout: 5000 });
+                        return false; // Don't retry on 400 errors
                     } else if (e.status === 429) {
-                        this.log('warn', 'Rate limited by Discord API, waiting before retry');
-                        await new Promise(resolve => setTimeout(resolve, 5000));
+                        this.log('warn', 'Rate limited by Discord API, backing off...');
+                        // Wait longer on rate limit
+                        await new Promise(resolve => setTimeout(resolve, 10000));
                     } else {
-                        this.log('debug', 'API claim failed', e.message);
+                        this.log('debug', `API claim failed with status ${e.status}:`, e.message);
                     }
                 }
             }
@@ -1581,26 +1610,33 @@ module.exports = class BasePlugin {
                 return true;
             }
 
-            // If quest is completed but not claimed, it might auto-claim or need manual claim
+            // If quest is completed but not claimed and we've tried methods
             if (finalCheck && finalCheck.completed && !finalCheck.claimed) {
-                this.log('info', `Quest ${quest.id} completed but not claimed - may require manual action`);
+                // If we got a 400 error from API, don't retry - it's a structural issue
+                if (apiError && apiError.status === 400) {
+                    this.log('info', `Quest ${quest.id} requires manual claim (API deprecated)`);
+                    return false;
+                }
                 
-                // Retry logic with exponential backoff
+                // Only retry if we haven't hit max retries and haven't been rate limited too much
                 if (retryCount < maxRetries) {
-                    const backoffDelay = Math.min(2000 * Math.pow(2, retryCount), 15000);
-                    this.log('info', `Retrying claim in ${backoffDelay}ms...`);
+                    const backoffDelay = Math.min(5000 * Math.pow(2, retryCount), 30000);
+                    this.log('info', `Quest ${quest.id} completed but not claimed - retrying in ${backoffDelay}ms...`);
                     await new Promise(resolve => setTimeout(resolve, backoffDelay));
                     return await this.claimQuestRewards(quest, retryCount + 1);
+                } else {
+                    this.log('warn', `Quest ${quest.id}: Max retries reached. Manual claim may be required.`);
+                    UI.showToast(`Quest "${quest.config?.messages?.questName || 'Quest'}" may require manual claim`, { type: 'warning', timeout: 5000 });
                 }
             }
 
-            this.log('warn', `Could not claim rewards for quest ${quest.id} after ${maxRetries + 1} attempts`);
             return false;
         } catch (err) {
             this.log('error', 'claimQuestRewards error', err.message);
             
+            // Don't retry on unexpected errors if we've already retried
             if (retryCount < maxRetries) {
-                const backoffDelay = Math.min(2000 * Math.pow(2, retryCount), 15000);
+                const backoffDelay = Math.min(5000 * Math.pow(2, retryCount), 30000);
                 await new Promise(resolve => setTimeout(resolve, backoffDelay));
                 return await this.claimQuestRewards(quest, retryCount + 1);
             }

@@ -1,20 +1,27 @@
 {
-    "acceptQuestsAutomatically": true,
-    "autoCompleteAllQuests": true,
-    "autoClaimRewards": true,
-    "autoStartVideoQuests": false,
-    "retryFailedQuests": true,
-    "verifyQuestCompletion": true,
-    "claimRetryAttempts": 3,
-    "questNotifications": true,
-    "suppressQuestProgressPill": true,
-    "concurrentFarms": 5,
-    "delayBetweenFarms": 2,
     "checkForNewQuests": 10,
+    "autoStartVideoQuests": false,
+    "suppressQuestProgressPill": false,
     "maxFallbackAttempts": 30,
+    "concurrentFarms": 5,
     "enableVerboseLogging": false,
+    "acceptQuestsAutomatically": true,
+    "showQuestsButtonTitleBar": true,
+    "showQuestsButtonSettingsBar": true,
+    "showQuestsButtonBadges": true,
+    "delayBetweenFarms": 2,
+    "autoCompleteAllQuests": true,
+    "retryFailedQuests": true,
+    "questNotifications": false,
+    "version": "1.1.0",
     "currentVersionInfo": {
         "version": "1.6.1",
         "hasShownChangelog": true
-    }
+    },
+    "autoClaimRewards": true,
+    "verifyQuestCompletion": true,
+    "claimRetryAttempts": 5,
+    "failedClaimQuests": [
+        "1461152783888810047"
+    ]
 }
