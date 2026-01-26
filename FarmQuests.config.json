@@ -3,7 +3,7 @@
     "autoStartVideoQuests": false,
     "suppressQuestProgressPill": true,
     "maxFallbackAttempts": 30,
-    "concurrentFarms": 3,
+    "concurrentFarms": 5,
     "enableVerboseLogging": false,
     "acceptQuestsAutomatically": true,
     "showQuestsButtonTitleBar": true,
@@ -12,5 +12,13 @@
     "delayBetweenFarms": 2,
     "autoCompleteAllQuests": true,
     "retryFailedQuests": true,
-    "questNotifications": true
+    "questNotifications": true,
+    "version": "1.1.0",
+    "currentVersionInfo": {
+        "version": "1.6.1",
+        "hasShownChangelog": true
+    },
+    "autoClaimRewards": true,
+    "verifyQuestCompletion": true,
+    "claimRetryAttempts": 3
 }

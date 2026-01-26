@@ -1,7 +1,7 @@
-﻿/**
+/**
  * @name FarmQuests
  * @description A plugin that farms you multiple discord quests in background simultaneously.
- * @version 1.0.5
+ * @version 1.6.1
  * @author Sophan-Developer
  * @authorLink https://github.com/Sophan-Developer
  * @website https://github.com/Sophan-Developer/FarmQuests
@@ -12,26 +12,51 @@
 // Porting of https://gist.github.com/aamiaa/204cd9d42013ded9faf646fae7f89fbb for betterdiscord
 
 const config = {
+    info: {
+        name: 'FarmQuests',
+        version: '1.6.1',
+        github_raw: 'https://raw.githubusercontent.com/Sophan-Developer/FarmQuests/main/FarmQuests.plugin.js'
+    },
     changelog: [
-        //{ title: "New Features", type: "added", items: ["Added changelog"] },
-        //{ title: "Bug Fix", type: "fixed", items: [""] },
-        //{ title: "Improvements", type: "improved", items: [""] },
-        //{ title: "On-going", type: "progress", items: [""] }
+        { title: "Bug Fixes (Jan 2026)", type: "fixed", items: [
+            "Fixed syntax error in API module resolution (line 87)",
+            "Fixed version comparison logic in update checker",
+            "Fixed memory leaks - intervals and Flux subscriptions now properly cleaned up",
+            "Added null-safety guards in webpack module finder"
+        ]},
+        { title: "New Features", type: "added", items: [
+            "Added 'Copy Debug Info' feature for easier troubleshooting",
+            "Added user-friendly error notices with debug option",
+            "Added cleanup registry to track all intervals/timeouts/subscriptions"
+        ]},
+        { title: "Improvements", type: "improved", items: [
+            "Better error handling when Discord modules are missing",
+            "Improved stop() cleanup to prevent resource leaks",
+            "More robust store resolution with better fallback patterns"
+        ]}
     ],
     settings: [
-		{ type: "number", id: "checkForNewQuests", name: "Interval to check for new quests(min)", note: "The time (in minutes) to check for new quests", value: 5, min: 1, step: 1, page: 1 },
-		{ type: "switch", id: "autoStartVideoQuests", name: "Auto-start video quests", note: "Automatically click 'Start Video Quest' when available", value: true, page: 1 },
-		{ type: "number", id: "maxFallbackAttempts", name: "Max fallback attempts", note: "How many fallback heartbeat attempts before forcing completion", value: 30, min: 1, step: 1, page: 1 },
-		{ type: "number", id: "concurrentFarms", name: "Concurrent farms", note: "Maximum number of quests to farm at the same time", value: 3, min: 1, step: 1, page: 1 },
-		{ type: "number", id: "delayBetweenFarms", name: "Delay between farms (sec)", note: "Delay in seconds between completing quests", value: 2, min: 0, step: 1, page: 1 },
-		{ type: "switch", id: "enableVerboseLogging", name: "Verbose logging", note: "Enable verbose debug logs for troubleshooting", value: false, page: 2 },
-        { type: "switch", id: "acceptQuestsAutomatically", name: "Accept Quests Automatically", note: "Whether to accept available quests automatically.", value: true, page: 2 },
-        { type: "switch", id: "showQuestsButtonTitleBar", name: "Show Quests Title Bar", note: "Whether to show the quests button in the title bar.", value: true, page: 2 },
-        { type: "switch", id: "showQuestsButtonSettingsBar", name: "Show Quests Settings Bar", note: "Whether to show the quests button in the settings bar.", value: true, page: 2 },
-        { type: "switch", id: "showQuestsButtonBadges", name: "Show Quests Badges", note: "Whether to show badges on the quests button.", value: true, page: 2 },
-        { type: "switch", id: "autoCompleteAllQuests", name: "Auto-complete all quests", note: "Automatically complete all quests without watching videos", value: false, page: 2 },
-        { type: "switch", id: "retryFailedQuests", name: "Retry failed quests", note: "Automatically retry quests that fail to complete", value: true, page: 2 },
-        { type: "switch", id: "questNotifications", name: "Quest notifications", note: "Show notifications when quests are completed", value: true, page: 2 }
+        // ═══════════════════════════════════════════════════════════════
+        // PAGE 1: Main Quest Settings (Auto-farming behavior)
+        // ═══════════════════════════════════════════════════════════════
+        { type: "switch", id: "acceptQuestsAutomatically", name: "🎯 Auto Accept Quests", note: "Automatically accept new available quests", value: true, page: 1 },
+        { type: "switch", id: "autoCompleteAllQuests", name: "⚡ Auto Complete Quests", note: "Automatically complete all quests (video/play/stream)", value: true, page: 1 },
+        { type: "switch", id: "autoClaimRewards", name: "🎁 Auto Claim Rewards", note: "Automatically claim quest rewards after completion", value: true, page: 1 },
+        { type: "switch", id: "retryFailedQuests", name: "🔄 Retry Failed Quests", note: "Automatically retry quests that fail to complete", value: true, page: 1 },
+        { type: "switch", id: "questNotifications", name: "🔔 Quest Notifications", note: "Show notifications for quest progress and completion", value: true, page: 1 },
+        { type: "switch", id: "autoStartVideoQuests", name: "▶️ Auto Start Video Quests", note: "Automatically click 'Start Video Quest' button when available", value: true, page: 1 },
+        
+        // ═══════════════════════════════════════════════════════════════
+        // PAGE 2: Advanced Settings (Timing & Technical)
+        // ═══════════════════════════════════════════════════════════════
+        { type: "number", id: "checkForNewQuests", name: "⏱️ Quest Check Interval (min)", note: "How often to check for new quests (in minutes)", value: 5, min: 1, max: 60, step: 1, page: 2 },
+        { type: "number", id: "concurrentFarms", name: "📊 Max Concurrent Farms", note: "Maximum number of quests to farm simultaneously", value: 3, min: 1, max: 10, step: 1, page: 2 },
+        { type: "number", id: "delayBetweenFarms", name: "⏳ Delay Between Farms (sec)", note: "Delay in seconds between starting each quest", value: 2, min: 0, max: 30, step: 1, page: 2 },
+        { type: "number", id: "maxFallbackAttempts", name: "🔁 Max Fallback Attempts", note: "Maximum heartbeat attempts before forcing completion", value: 30, min: 5, max: 100, step: 5, page: 2 },
+        { type: "number", id: "claimRetryAttempts", name: "🎁 Claim Retry Attempts", note: "Number of times to retry claiming rewards if it fails", value: 3, min: 1, max: 10, step: 1, page: 2 },
+        { type: "switch", id: "verifyQuestCompletion", name: "✅ Verify Quest Completion", note: "Double-check that quests are properly completed and claimed", value: true, page: 2 },
+        { type: "switch", id: "suppressQuestProgressPill", name: "🚫 Hide Progress Pill", note: "Hide the quest progress notification pill in Discord", value: false, page: 2 },
+        { type: "switch", id: "enableVerboseLogging", name: "📝 Verbose Logging", note: "Enable detailed debug logs in console (for troubleshooting)", value: false, page: 2 }
     ]
 };
 
@@ -39,10 +64,8 @@ function getSetting(key) {
     return config.settings.reduce((found, setting) => found ? found : (setting.id === key ? setting : setting.settings?.find(s => s.id === key)), undefined)
 }
 
-const Webpack = (BdApi && BdApi.Webpack) ? BdApi.Webpack : {};
-const Data = (BdApi && BdApi.Data) ? BdApi.Data : { load: () => undefined, save: () => {} };
-const UI = (BdApi && BdApi.UI) ? BdApi.UI : { buildSettingsPanel: () => null, showChangelogModal: () => {} };
-const Patcher = (BdApi && BdApi.Patcher) ? BdApi.Patcher : { instead: () => {}, unpatchAll: () => {}, after: () => {}, before: () => {} };
+const { Webpack, Data, UI, Patcher, Utils } = BdApi;
+const Logger = { info: console.log, warn: console.warn, error: console.error, debug: console.debug };
 
 const Filters = Webpack.Filters ?? {
 	byProps: (...props) => (m) => props.every(p => m && (p in m)),
@@ -50,26 +73,22 @@ const Filters = Webpack.Filters ?? {
 	bySource: () => () => false
 };
 
-let DiscordModules = null, ApplicationStreamingStore = null, RunningGameStore = null, QuestsStore = null, ChannelStore = null, GuildChannelStore = null;
-try {
-	if (typeof Webpack.getBulk === "function") {
-		[ DiscordModules, ApplicationStreamingStore, RunningGameStore, QuestsStore, ChannelStore, GuildChannelStore ] =
-			Webpack.getBulk(
-				{ filter: Filters.byProps ? Filters.byProps("dispatch", "subscribe") : () => false },
-				{ filter: Filters.byStoreName ? Filters.byStoreName("ApplicationStreamingStore") : () => false },
-				{ filter: Filters.byStoreName ? Filters.byStoreName("RunningGameStore") : () => false },
-				{ filter: Filters.byStoreName ? Filters.byStoreName("QuestsStore") : () => false },
-				{ filter: Filters.byStoreName ? Filters.byStoreName("ChannelStore") : () => false },
-				{ filter: Filters.byStoreName ? Filters.byStoreName("GuildChannelStore") : () => false }
-			);
-	}
-} catch (e) {
-	console.warn("FarmQuests: Webpack.getBulk failed", e);
-}
+// Use Webpack.Stores directly like AutoQuestComplete for better reliability
+let ApplicationStreamingStore = Webpack.Stores?.ApplicationStreamingStore ?? null;
+let RunningGameStore = Webpack.Stores?.RunningGameStore ?? null;
+let QuestsStore = Webpack.Stores?.QuestStore ?? null;
+let ChannelStore = Webpack.Stores?.ChannelStore ?? null;
+let GuildChannelStore = Webpack.Stores?.GuildChannelStore ?? null;
+let FluxDispatcher = Webpack.getByKeys?.('dispatch', 'subscribe', 'register') ?? null;
 
 let apiModule = null;
 try {
-	if (typeof Webpack.getBySource === "function") apiModule = Webpack.getBySource('bind(null,"get")');
+	if (typeof Webpack.getBySource === "function") {
+		apiModule = Webpack.getBySource('bind(null,"get")');
+	}
+	if (!apiModule && typeof Webpack.getModule === "function") {
+		apiModule = Webpack.getModule(m => m?.tn?.get);
+	}
 } catch (e) { /* ignore */ }
 const api = apiModule?.tn ?? null;
 
@@ -77,6 +96,13 @@ let _cachedQuestsStore = null;
 function getQuestsStore() {
     if (_cachedQuestsStore) return _cachedQuestsStore;
 
+    // Priority 1: Use Webpack.Stores like AutoQuestComplete
+    if (Webpack.Stores?.QuestStore) {
+        _cachedQuestsStore = Webpack.Stores.QuestStore;
+        return _cachedQuestsStore;
+    }
+
+    // Priority 2: Use already resolved store
     if (typeof QuestsStore !== "undefined" && QuestsStore) {
         _cachedQuestsStore = QuestsStore;
         return _cachedQuestsStore;
@@ -141,26 +167,51 @@ function resolveStoresFromChunk() {
 		webpackChunkdiscord_app.pop();
 		const modules = Object.values(wpRequire.c || {});
 
-		const findExports = test => {
+		// Helper to find module exports matching a test function (with null safety)
+		const findModule = test => {
+			if (!modules || !Array.isArray(modules)) return null;
 			for (const m of modules) {
 				try {
-					if (!m || !m.exports) continue;
+					if (!m || typeof m !== 'object') continue;
+					if (!m.exports || typeof m.exports !== 'object') continue;
 					if (test(m.exports)) return m.exports;
-				} catch(e){ /* ignore */ }
+					// Also check if test matches the module itself
+					if (test(m)) return m;
+				} catch(e){ /* ignore individual module errors */ }
 			}
 			return null;
 		};
 
-		const get = obj => obj?.Z ?? obj?.ZP ?? obj ?? null;
-
+		// Updated selectors based on Discord's January 2026 update (from aamiaa's gist)
+		// These use the new export patterns: exports.A.__proto__, exports.Ay, exports.h, exports.Bo
 		_chunkStores = {
-			ApplicationStreamingStore: get(findExports(e => !!e?.Z?.__proto__?.getStreamerActiveStreamMetadata)),
-			RunningGameStore: get(findExports(e => !!e?.ZP?.getRunningGames) || findExports(e => !!e?.Z?.getRunningGames)),
-			QuestsStore: get(findExports(e => !!e?.Z?.__proto__?.getQuest) || findExports(e => !!e?.Z?.quests)),
-			ChannelStore: get(findExports(e => !!e?.Z?.__proto__?.getAllThreadsForParent)),
-			GuildChannelStore: get(findExports(e => !!e?.ZP?.getSFWDefaultChannel) || findExports(e => !!e?.ZP?.getDefaultChannel)),
-			FluxDispatcher: get(findExports(e => !!e?.Z?.__proto__?.flushWaitQueue) || findExports(e => !!e?.ZP?.flushWaitQueue)),
-			api: (findExports(e => !!e?.tn?.get) ?? {}).tn ?? null
+			// ApplicationStreamingStore - exports.A.__proto__.getStreamerActiveStreamMetadata
+			ApplicationStreamingStore: findModule(x => x?.exports?.A?.__proto__?.getStreamerActiveStreamMetadata)?.exports?.A ?? 
+				findModule(x => x?.A?.__proto__?.getStreamerActiveStreamMetadata)?.A ?? null,
+			
+			// RunningGameStore - exports.Ay.getRunningGames
+			RunningGameStore: findModule(x => x?.exports?.Ay?.getRunningGames)?.exports?.Ay ?? 
+				findModule(x => x?.Ay?.getRunningGames)?.Ay ?? null,
+			
+			// QuestsStore - exports.A.__proto__.getQuest
+			QuestsStore: findModule(x => x?.exports?.A?.__proto__?.getQuest)?.exports?.A ?? 
+				findModule(x => x?.A?.__proto__?.getQuest)?.A ?? null,
+			
+			// ChannelStore - exports.A.__proto__.getAllThreadsForParent
+			ChannelStore: findModule(x => x?.exports?.A?.__proto__?.getAllThreadsForParent)?.exports?.A ?? 
+				findModule(x => x?.A?.__proto__?.getAllThreadsForParent)?.A ?? null,
+			
+			// GuildChannelStore - exports.Ay.getSFWDefaultChannel
+			GuildChannelStore: findModule(x => x?.exports?.Ay?.getSFWDefaultChannel)?.exports?.Ay ?? 
+				findModule(x => x?.Ay?.getSFWDefaultChannel)?.Ay ?? null,
+			
+			// FluxDispatcher - exports.h.__proto__.flushWaitQueue
+			FluxDispatcher: findModule(x => x?.exports?.h?.__proto__?.flushWaitQueue)?.exports?.h ?? 
+				findModule(x => x?.h?.__proto__?.flushWaitQueue)?.h ?? null,
+			
+			// API module - exports.Bo.get
+			api: findModule(x => x?.exports?.Bo?.get)?.exports?.Bo ?? 
+				findModule(x => x?.Bo?.get)?.Bo ?? null
 		};
 
 		return _chunkStores;
@@ -197,32 +248,114 @@ module.exports = class BasePlugin {
 		this.farmingQuest = new Map();
 		this.fakeGames = new Map();
 		this.fakeApplications = new Map();
-		this.RunningGameStore = RunningGameStore ?? null;
-		this.ApplicationStreamingStore = ApplicationStreamingStore ?? null;
-		this.QuestsStore = QuestsStore ?? null;
-		this.ChannelStore = ChannelStore ?? null;
-		this.GuildChannelStore = GuildChannelStore ?? null;
-		this.DiscordModules = DiscordModules ?? null;
-		this.api = api ?? null;
+		
+		// Cleanup registry for intervals, timeouts, and subscriptions
+		this._cleanupRegistry = {
+			intervals: new Set(),
+			timeouts: new Set(),
+			subscriptions: new Map() // eventName -> [handlers]
+		};
+		
+		// Assign stores directly from Webpack.Stores like AutoQuestComplete does in constructor
+		// This is the KEY - AutoQuestComplete does: this._questsStore = Webpack.Stores.QuestStore
+		this.QuestsStore = Webpack.Stores?.QuestStore ?? null;
+		this.RunningGameStore = Webpack.Stores?.RunningGameStore ?? null;
+		this.ApplicationStreamingStore = Webpack.Stores?.ApplicationStreamingStore ?? null;
+		this.ChannelStore = Webpack.Stores?.ChannelStore ?? null;
+		this.GuildChannelStore = Webpack.Stores?.GuildChannelStore ?? null;
+		this.FluxDispatcher = Webpack.getByKeys?.('dispatch', 'subscribe', 'register') ?? null;
+		this.api = Webpack.getModule?.(m => m?.tn?.get)?.tn ?? null;
+		
+		this._boundHandleQuestChange = this.handleQuestChange.bind(this);
+		this._boundHandleNewQuest = this.handleNewQuest.bind(this);
+		this._activeQuestId = null;
+		this._activeQuestName = null;
+		
+		console.log('[FarmQuests] Constructor - QuestsStore:', !!this.QuestsStore, 'quests:', !!this.QuestsStore?.quests);
+		
+		// Initialize version tracking
+		this._initVersionTracking();
+	}
+
+	// ═══════════════════════════════════════════════════════════════
+	// CLEANUP REGISTRY HELPERS - Prevents memory leaks
+	// ═══════════════════════════════════════════════════════════════
+	
+	/** Register an interval for cleanup on stop() */
+	_registerInterval(intervalId) {
+		if (intervalId && this._cleanupRegistry?.intervals) {
+			this._cleanupRegistry.intervals.add(intervalId);
+		}
+		return intervalId;
+	}
+	
+	/** Register a timeout for cleanup on stop() */
+	_registerTimeout(timeoutId) {
+		if (timeoutId && this._cleanupRegistry?.timeouts) {
+			this._cleanupRegistry.timeouts.add(timeoutId);
+		}
+		return timeoutId;
+	}
+	
+	/** Register a Flux subscription for cleanup on stop() */
+	_registerSubscription(eventName, handler) {
+		if (!this._cleanupRegistry?.subscriptions) return;
+		if (!this._cleanupRegistry.subscriptions.has(eventName)) {
+			this._cleanupRegistry.subscriptions.set(eventName, []);
+		}
+		this._cleanupRegistry.subscriptions.get(eventName).push(handler);
+	}
+	
+	/** Clear a specific interval and remove from registry */
+	_clearInterval(intervalId) {
+		if (intervalId) {
+			clearInterval(intervalId);
+			this._cleanupRegistry?.intervals?.delete(intervalId);
+		}
+	}
+	
+	/** Clear a specific timeout and remove from registry */
+	_clearTimeout(timeoutId) {
+		if (timeoutId) {
+			clearTimeout(timeoutId);
+			this._cleanupRegistry?.timeouts?.delete(timeoutId);
+		}
+	}
+
+	_initVersionTracking() {
+		// Version tracking like AutoQuestComplete
+		try {
+			let currentVersionInfo = Object.assign({}, { version: config.info.version, hasShownChangelog: false }, Data.load(this.meta.name, "currentVersionInfo") || {});
+			if (config.info.version !== currentVersionInfo.version) currentVersionInfo.hasShownChangelog = false;
+			currentVersionInfo.version = config.info.version;
+			Data.save(this.meta.name, "currentVersionInfo", currentVersionInfo);
+			this.currentVersionInfo = currentVersionInfo;
+		} catch (err) {
+			Logger.error('FarmQuests version tracking failed', err);
+			this.currentVersionInfo = { version: config.info.version, hasShownChangelog: false };
+		}
 	}
 
 	initializeSettings() {
 		try {
 			// Initialize all settings with defaults if missing
 			const defaultSettings = {
+				// Page 1: Main Quest Settings
+				acceptQuestsAutomatically: true,
+				autoCompleteAllQuests: true,
+				autoClaimRewards: true,
+				retryFailedQuests: true,
+				questNotifications: true,
+				autoStartVideoQuests: true,
+				// Page 2: Advanced Settings
 				checkForNewQuests: 5,
-				autoStartVideoQuests: false,
-				maxFallbackAttempts: 30,
 				concurrentFarms: 3,
 				delayBetweenFarms: 2,
-				enableVerboseLogging: false,
-				acceptQuestsAutomatically: true,
-				showQuestsButtonTitleBar: true,
-				showQuestsButtonSettingsBar: true,
-				showQuestsButtonBadges: true,
-				autoCompleteAllQuests: false,
-				retryFailedQuests: true,
-				questNotifications: true
+				maxFallbackAttempts: 30,
+				claimRetryAttempts: 3,
+				verifyQuestCompletion: true,
+				suppressQuestProgressPill: false,
+				enableVerboseLogging: false
 			};
 			
 			for (const [key, defaultValue] of Object.entries(defaultSettings)) {
@@ -230,9 +363,7 @@ module.exports = class BasePlugin {
 					const stored = Data.load(this.meta.name, key);
 					if (typeof stored === 'undefined' || stored === null) {
 						Data.save(this.meta.name, key, defaultValue);
-						const setting = getSetting(key);
-						if (setting) setting.value = defaultValue;
-						this.log(`debug`, `Initialized setting ${key} with default value`, defaultValue);
+						this.log('debug', `Initialized setting ${key} = ${defaultValue}`);
 					}
 				} catch (e) {
 					this.log(`warn`, `Failed to initialize setting ${key}`, e);
@@ -258,16 +389,145 @@ module.exports = class BasePlugin {
 		}
 	}
 
+	/**
+	 * Generate debug info string for troubleshooting
+	 * @returns {string} Debug info in a copyable format
+	 */
+	getDebugInfo() {
+		try {
+			const info = {
+				plugin: {
+					name: this.meta?.name ?? 'FarmQuests',
+					version: config.info.version,
+				},
+				stores: {
+					QuestsStore: !!this.QuestsStore,
+					'Webpack.Stores.QuestStore': !!Webpack.Stores?.QuestStore,
+					RunningGameStore: !!this.RunningGameStore,
+					ApplicationStreamingStore: !!this.ApplicationStreamingStore,
+					ChannelStore: !!this.ChannelStore,
+					GuildChannelStore: !!this.GuildChannelStore,
+					FluxDispatcher: !!this.FluxDispatcher,
+					api: !!this.api,
+				},
+				quests: {
+					available: this.availableQuests?.length ?? 0,
+					farmable: this.farmableQuests?.length ?? 0,
+					farming: this.farmingQuest?.size ?? 0,
+				},
+				settings: {
+					autoCompleteAllQuests: this.settings.autoCompleteAllQuests,
+					autoClaimRewards: this.settings.autoClaimRewards,
+					verboseLogging: this.settings.enableVerboseLogging,
+				},
+				discord: {
+					isApp: typeof DiscordNative !== 'undefined',
+					bdVersion: BdApi.version ?? 'unknown',
+				},
+				timestamp: new Date().toISOString(),
+			};
+			return '```json\n' + JSON.stringify(info, null, 2) + '\n```';
+		} catch (e) {
+			return `Debug info generation failed: ${e.message}`;
+		}
+	}
+
+	/**
+	 * Copy debug info to clipboard and show toast
+	 */
+	copyDebugInfo() {
+		try {
+			const debugInfo = this.getDebugInfo();
+			if (typeof DiscordNative !== 'undefined' && DiscordNative.clipboard) {
+				DiscordNative.clipboard.copy(debugInfo);
+			} else {
+				navigator.clipboard.writeText(debugInfo);
+			}
+			UI.showToast('Debug info copied to clipboard!', { type: 'success' });
+		} catch (e) {
+			UI.showToast('Failed to copy debug info', { type: 'error' });
+			console.error('[FarmQuests] copyDebugInfo failed:', e);
+		}
+	}
+
+	/**
+	 * Show a user-friendly error notice with debug option
+	 * @param {string} title Error title
+	 * @param {string} message Error message
+	 * @param {Error} [error] Optional error object
+	 */
+	showErrorNotice(title, message, error = null) {
+		try {
+			const fullMessage = error ? `${message}\n\nError: ${error.message}` : message;
+			
+			if (typeof UI.showNotification === 'function') {
+				UI.showNotification({
+					title: `⚠️ ${title}`,
+					content: fullMessage,
+					type: 'error',
+					duration: 10000,
+					actions: [
+						{
+							label: '📋 Copy Debug Info',
+							onClick: () => this.copyDebugInfo()
+						},
+						{
+							label: 'Dismiss',
+							onClick: () => {}
+						}
+					]
+				});
+			} else {
+				UI.showToast(`${title}: ${message}`, { type: 'error' });
+			}
+		} catch (e) {
+			console.error('[FarmQuests] showErrorNotice failed:', e);
+		}
+	}
+
 	ensureStores() {
 		try {
-			const chunk = resolveStoresFromChunk() ?? {};
-			this.RunningGameStore = this.RunningGameStore ?? chunk.RunningGameStore ?? RunningGameStore ?? null;
-			this.ApplicationStreamingStore = this.ApplicationStreamingStore ?? chunk.ApplicationStreamingStore ?? ApplicationStreamingStore ?? null;
-			this.QuestsStore = this.QuestsStore ?? chunk.QuestsStore ?? QuestsStore ?? null;
-			this.ChannelStore = this.ChannelStore ?? chunk.ChannelStore ?? ChannelStore ?? null;
-			this.GuildChannelStore = this.GuildChannelStore ?? chunk.GuildChannelStore ?? GuildChannelStore ?? null;
-			this.DiscordModules = this.DiscordModules ?? chunk.FluxDispatcher ?? DiscordModules ?? null;
-			this.api = this.api ?? chunk.api ?? api ?? null;
+			// Reset ALL cached stores to force fresh resolution (fixes enable/disable without restart)
+			_chunkStores = null;
+			_cachedQuestsStore = null;
+			
+			// Priority 1: Use Webpack.Stores directly like AutoQuestComplete (most reliable)
+			this.QuestsStore = Webpack.Stores?.QuestStore ?? null;
+			this.RunningGameStore = Webpack.Stores?.RunningGameStore ?? null;
+			this.ApplicationStreamingStore = Webpack.Stores?.ApplicationStreamingStore ?? null;
+			this.ChannelStore = Webpack.Stores?.ChannelStore ?? null;
+			this.GuildChannelStore = Webpack.Stores?.GuildChannelStore ?? null;
+			this.FluxDispatcher = Webpack.getByKeys?.('dispatch', 'subscribe', 'register') ?? null;
+			this.api = Webpack.getModule?.(m => m?.tn?.get)?.tn ?? null;
+			
+			// Priority 2: Fallback to chunk resolution if Webpack.Stores doesn't work
+			if (!this.QuestsStore || !this.FluxDispatcher || !this.api) {
+				const chunk = resolveStoresFromChunk() ?? {};
+				this.QuestsStore = this.QuestsStore ?? chunk.QuestsStore ?? null;
+				this.RunningGameStore = this.RunningGameStore ?? chunk.RunningGameStore ?? null;
+				this.ApplicationStreamingStore = this.ApplicationStreamingStore ?? chunk.ApplicationStreamingStore ?? null;
+				this.ChannelStore = this.ChannelStore ?? chunk.ChannelStore ?? null;
+				this.GuildChannelStore = this.GuildChannelStore ?? chunk.GuildChannelStore ?? null;
+				this.FluxDispatcher = this.FluxDispatcher ?? chunk.FluxDispatcher ?? null;
+				this.api = this.api ?? chunk.api ?? null;
+			}
+			
+			// Show warning if critical modules are missing
+			const missing = [];
+			if (!this.QuestsStore) missing.push('QuestsStore');
+			if (!this.FluxDispatcher) missing.push('FluxDispatcher');
+			if (!this.api) missing.push('API');
+			
+			if (missing.length > 0) {
+				this.showErrorNotice(
+					'Missing Modules',
+					`Some Discord modules could not be found: ${missing.join(', ')}. The plugin may not work correctly.`
+				);
+			}
+			
+			// Set DiscordModules as alias to FluxDispatcher for backward compatibility
+			this.DiscordModules = this.FluxDispatcher;
+			
 			const verbose = !!(this.settings.enableVerboseLogging ?? getSetting('enableVerboseLogging')?.value);
 			if (verbose) console.debug("FarmQuests: resolved stores:", {
 				RunningGameStore: !!this.RunningGameStore,
@@ -275,11 +535,12 @@ module.exports = class BasePlugin {
 				QuestsStore: !!this.QuestsStore,
 				ChannelStore: !!this.ChannelStore,
 				GuildChannelStore: !!this.GuildChannelStore,
-				DiscordModules: !!this.DiscordModules,
+				FluxDispatcher: !!this.FluxDispatcher,
 				api: !!this.api
 			});
 		} catch (e) {
 			console.warn("FarmQuests: ensureStores failed", e);
+			this.showErrorNotice('Store Resolution Failed', 'Failed to find Discord modules.', e);
 		}
 	}
 
@@ -499,22 +760,153 @@ module.exports = class BasePlugin {
 	}
 
 	showChangelog() {
-		const savedVersion = Data.load(this.meta.name, "version");
-		if (savedVersion !== this.meta.version && config.changelog.length > 0) {
+		if (!this.currentVersionInfo.hasShownChangelog && config.changelog.length > 0) {
 			UI.showChangelogModal({
 				title: this.meta.name,
 				subtitle: this.meta.version,
 				changes: config.changelog
 			});
-			Data.save(this.meta.name, "version", this.meta.version);
+			this.currentVersionInfo.hasShownChangelog = true;
+			Data.save(this.meta.name, "currentVersionInfo", this.currentVersionInfo);
+		}
+	}
+
+	async checkForUpdate() {
+		try {
+			const response = await fetch(config.info.github_raw, { headers: { "User-Agent": "BetterDiscord" } });
+			if (!response.ok) return;
+			const fileContent = await response.text();
+			const remoteMeta = this.parseMeta(fileContent);
+			// Check if remote version is newer (compareVersions returns < 0 if v1 < v2)
+			if (remoteMeta.version && this.compareVersions(config.info.version, remoteMeta.version) < 0) {
+				this.showUpdateNotification(remoteMeta, fileContent);
+			}
+		} catch (err) {
+			this.log('warn', 'Failed to check for updates', err.message);
+		}
+	}
+
+	parseMeta(fileContent) {
+		const meta = {};
+		const regex = /@([a-zA-Z]+)\s+(.+)/g;
+		let match;
+		while ((match = regex.exec(fileContent)) !== null) {
+			meta[match[1]] = match[2].trim();
+		}
+		return meta;
+	}
+
+	compareVersions(v1, v2) {
+		// Use BdApi Utils.semverCompare like AutoQuestComplete for better reliability
+		if (Utils && typeof Utils.semverCompare === 'function') {
+			return Utils.semverCompare(v1, v2);
+		}
+		// Fallback to manual comparison
+		const parts1 = v1.split('.').map(Number);
+		const parts2 = v2.split('.').map(Number);
+		for (let i = 0; i < Math.max(parts1.length, parts2.length); i++) {
+			const p1 = parts1[i] || 0;
+			const p2 = parts2[i] || 0;
+			if (p1 < p2) return -1;
+			if (p1 > p2) return 1;
+		}
+		return 0;
+	}
+
+	showUpdateNotification(remoteMeta, remoteFile) {
+		this.log('info', `Update available: ${remoteMeta.version}`);
+		try {
+			if (typeof UI.showNotification === 'function') {
+				UI.showNotification({
+					title: `${this.meta.name} Update Available!`,
+					content: `Version ${remoteMeta.version} is now available!`,
+					type: 'info',
+					duration: 1/0,
+					actions: [
+						{
+							label: 'Update Now',
+							onClick: async () => {
+								if (remoteFile) {
+									try {
+										const fs = require('fs');
+										const path = require('path');
+										await new Promise(r => fs.writeFile(path.join(BdApi.Plugins.folder, `${config.info.name}.plugin.js`), remoteFile, r));
+										// Reset changelog flag like AutoQuestComplete
+										let currentVersionInfo = Data.load(this.meta.name, "currentVersionInfo") || {};
+										currentVersionInfo.hasShownChangelog = false;
+										Data.save(this.meta.name, "currentVersionInfo", currentVersionInfo);
+										UI.showToast('Update downloaded! Please reload Discord.', { type: 'success' });
+									} catch (err) {
+										this.log('error', 'Failed to download update', err.message);
+										UI.showToast('Failed to download update', { type: 'error' });
+									}
+								}
+							}
+						},
+						{ label: 'Update Later', onClick: () => {} }
+					]
+				});
+			} else {
+				UI.showToast(`Update ${remoteMeta.version} available for ${this.meta.name}!`, { type: 'info' });
+			}
+		} catch (e) {
+			this.log('warn', 'Failed to show update notification', e.message);
+		}
+	}
+
+	showQuestNotification(quest, completed = false) {
+		if (!this.settings.questNotifications) return;
+		try {
+			const questName = quest?.config?.messages?.questName ?? quest?.config?.application?.name ?? 'Quest';
+			if (typeof UI.showNotification === 'function') {
+				UI.showNotification({
+					title: completed ? 'Quest Completed!' : 'Quest Started',
+					content: completed ? `Successfully completed ${questName}!` : `Farming ${questName}...`,
+					type: completed ? 'success' : 'info',
+					duration: 5000
+				});
+			} else {
+				UI.showToast(completed ? `Quest completed: ${questName}` : `Farming: ${questName}`, { 
+					type: completed ? 'success' : 'info' 
+				});
+			}
+		} catch (e) {
+			this.log('debug', 'Failed to show quest notification', e.message);
 		}
 	}
 
 	start() {
+		console.log('[FarmQuests] Starting plugin...');
 		this.showChangelog();
 		this.initializeSettings();
 		this.ensureStores();
+		this.checkForUpdate().catch(() => {});
 
+		// Debug: Log store availability
+		console.log('[FarmQuests] Stores after ensureStores:', {
+			QuestsStore: !!this.QuestsStore,
+			'Webpack.Stores.QuestStore': !!Webpack.Stores?.QuestStore,
+			RunningGameStore: !!this.RunningGameStore,
+			FluxDispatcher: !!this.FluxDispatcher,
+			api: !!this.api
+		});
+
+		// Add quest change listeners like AutoQuestComplete
+		try {
+			// Use FRESH store from Webpack.Stores like AutoQuestComplete
+			const questStore = Webpack.Stores?.QuestStore ?? this.QuestsStore;
+			if (questStore && typeof questStore.addChangeListener === 'function') {
+				questStore.addChangeListener(this._boundHandleQuestChange);
+				questStore.addChangeListener(this._boundHandleNewQuest);
+				console.log('[FarmQuests] Added change listeners to QuestStore');
+			} else {
+				console.warn('[FarmQuests] Could not add change listeners - questStore:', !!questStore);
+			}
+		} catch (e) {
+			this.log('warn', 'Failed to add quest change listeners', e.message);
+		}
+
+		// Setup patchers for running games and streaming
 		if (this.RunningGameStore) {
 			Patcher.instead(this.meta.name, this.RunningGameStore, "getRunningGames", (thisObject, args, originalFunction) => {
 				if (this.fakeGames.size > 0) {
@@ -540,19 +932,120 @@ module.exports = class BasePlugin {
 			});
 		}
 
-		this.updateQuests();
+		// IMMEDIATELY check and run quests like AutoQuestComplete (don't wait for interval)
+		this.runImmediateQuestCheck();
+		
 		this.startInterval();
 		try {
 			if (this.settings.autoStartVideoQuests ?? getSetting('autoStartVideoQuests')?.value) {
 				this.startAutoStart();
 			}
 		} catch (e) { /* ignore */ }
+
+		// Claim any completed quests on startup
+		if (this.settings.autoClaimRewards) {
+			setTimeout(() => this.claimAllCompletedQuests(), 5000); // Wait 5s for Discord to fully load
+		}
+		
+		this.log('info', 'Plugin started successfully!');
+		UI.showToast('FarmQuests started!', { type: 'success' });
 	}
 
 	stop() {
 		this.stopInterval();
 		this.stopAutoStart();
+		
+		// Clear all farming states
+		this.farmingQuest.clear();
+		this.fakeGames.clear();
+		this.fakeApplications.clear();
+		
+		// Cleanup all registered intervals
+		if (this._cleanupRegistry?.intervals) {
+			for (const intervalId of this._cleanupRegistry.intervals) {
+				try { clearInterval(intervalId); } catch(e) {}
+			}
+			this._cleanupRegistry.intervals.clear();
+		}
+		
+		// Cleanup all registered timeouts
+		if (this._cleanupRegistry?.timeouts) {
+			for (const timeoutId of this._cleanupRegistry.timeouts) {
+				try { clearTimeout(timeoutId); } catch(e) {}
+			}
+			this._cleanupRegistry.timeouts.clear();
+		}
+		
+		// Cleanup all Flux subscriptions
+		if (this._cleanupRegistry?.subscriptions && this.FluxDispatcher) {
+			for (const [eventName, handlers] of this._cleanupRegistry.subscriptions) {
+				for (const handler of handlers) {
+					try { this.FluxDispatcher.unsubscribe(eventName, handler); } catch(e) {}
+				}
+			}
+			this._cleanupRegistry.subscriptions.clear();
+		}
+		
+		// Remove quest change listeners like AutoQuestComplete
+		try {
+			const questStore = Webpack.Stores?.QuestStore ?? this.QuestsStore;
+			if (questStore && typeof questStore.removeChangeListener === 'function') {
+				questStore.removeChangeListener(this._boundHandleQuestChange);
+				questStore.removeChangeListener(this._boundHandleNewQuest);
+			}
+		} catch (e) {
+			this.log('warn', 'Failed to remove quest change listeners', e.message);
+		}
+		
 		Patcher.unpatchAll(this.meta.name);
+		this.log('info', 'Plugin stopped');
+	}
+
+	// NEW: Immediately check and run quests on startup (like AutoQuestComplete)
+	runImmediateQuestCheck() {
+		try {
+			// Get FRESH QuestsStore directly like AutoQuestComplete
+			const questStore = Webpack.Stores?.QuestStore ?? this.QuestsStore;
+			
+			console.log('[FarmQuests] runImmediateQuestCheck - QuestStore:', !!questStore, 'quests:', !!questStore?.quests);
+			
+			if (!questStore || !questStore.quests) {
+				this.log('warn', 'QuestsStore not available for immediate check');
+				this.updateQuests(); // Fallback to regular update
+				return;
+			}
+
+			// Log all quests for debugging
+			const allQuests = [...questStore.quests.values()];
+			console.log('[FarmQuests] All quests count:', allQuests.length);
+			allQuests.forEach(q => {
+				console.log('[FarmQuests] Quest:', q.id, 'enrolled:', !!q.userStatus?.enrolledAt, 'completed:', !!q.userStatus?.completedAt, 'expires:', q.config?.expiresAt);
+			});
+
+			// Find enrolled but not completed quests (same logic as AutoQuestComplete)
+			const quest = allQuests.find(x =>
+				x.id !== "1248385850622869556" &&
+				x.userStatus?.enrolledAt &&
+				!x.userStatus?.completedAt &&
+				new Date(x.config.expiresAt).getTime() > Date.now()
+			);
+
+			if (quest) {
+				this._activeQuestId = quest.config.application.id;
+				this._activeQuestName = quest.config.application.name;
+				console.log('[FarmQuests] Found active quest:', this._activeQuestName, 'ID:', quest.id);
+				UI.showToast(`Found quest: ${this._activeQuestName}`, { type: 'info' });
+				this.farmQuest(quest);
+			} else {
+				console.log('[FarmQuests] No active enrolled quests found');
+			}
+
+			// Also run regular updateQuests for full quest list
+			this.updateQuests();
+		} catch (e) {
+			console.error('[FarmQuests] runImmediateQuestCheck failed:', e);
+			this.updateQuests(); // Fallback
+		}
 	}
 
 	startInterval() {
@@ -568,6 +1061,70 @@ module.exports = class BasePlugin {
 		if (this.updateInterval) {
 			clearInterval(this.updateInterval);
 			this.updateInterval = null;
+		}
+	}
+
+	// Automatically claim all completed quests
+	async claimAllCompletedQuests() {
+		try {
+			if (!this.settings.autoClaimRewards) {
+				this.log('debug', 'Auto-claim is disabled, skipping claim all');
+				return;
+			}
+
+			const store = this.QuestsStore ?? getQuestsStore();
+			if (!store) {
+				this.log('warn', 'QuestsStore not available for claiming');
+				return;
+			}
+
+			let questsList = [];
+			if (typeof store.quests !== "undefined") {
+				if (typeof store.quests.values === "function") questsList = [...store.quests.values()];
+				else if (Array.isArray(store.quests)) questsList = store.quests;
+				else questsList = Object.values(store.quests || {});
+			} else if (typeof store.getAll === "function") {
+				const res = store.getAll();
+				questsList = Array.isArray(res) ? res : Object.values(res || {});
+			}
+
+			const completedQuests = questsList.filter(q => {
+				if (!q || !q.userStatus) return false;
+				const completed = !!(q.userStatus.completedAt || q.userStatus.completed_at || q.userStatus.completed);
+				const claimed = !!(q.userStatus.claimedAt || q.userStatus.claimed_at || q.userStatus.claimed);
+				return completed && !claimed;
+			});
+
+			if (completedQuests.length === 0) {
+				this.log('debug', 'No completed unclaimed quests found');
+				return;
+			}
+
+			this.log('info', `Found ${completedQuests.length} completed quests ready to claim`);
+			UI.showToast(`Found ${completedQuests.length} quest(s) to claim...`, { type: 'info' });
+
+			let claimedCount = 0;
+			for (const quest of completedQuests) {
+				try {
+					this.log('info', `Claiming quest: ${quest.config?.messages?.questName || quest.id}`);
+					const success = await this.claimQuestRewards(quest);
+					if (success) {
+						claimedCount++;
+						await new Promise(resolve => setTimeout(resolve, 1000)); // Wait between claims
+					}
+				} catch (e) {
+					this.log('warn', `Failed to claim quest ${quest.id}:`, e.message);
+				}
+			}
+
+			if (claimedCount > 0) {
+				this.log('info', `Successfully claimed ${claimedCount} quest(s)`);
+				UI.showToast(`Successfully claimed ${claimedCount} quest reward(s)!`, { type: 'success' });
+			} else {
+				UI.showToast('Failed to claim quest rewards. Try manually.', { type: 'warning' });
+			}
+		} catch (err) {
+			this.log('error', 'claimAllCompletedQuests failed', err.message);
 		}
 	}
 
@@ -650,8 +1207,222 @@ module.exports = class BasePlugin {
 				}
 			}
 			if (verbose) console.log("Farmable quests updated:", this.farmableQuests);
+
+			// Automatically claim any completed quests
+			if (this.settings.autoClaimRewards) {
+				const completedUnclaimed = (this.availableQuests || []).filter(q => {
+					if (!q || !q.userStatus) return false;
+					const completed = !!(q.userStatus.completedAt || q.userStatus.completed_at || q.userStatus.completed);
+					const claimed = !!(q.userStatus.claimedAt || q.userStatus.claimed_at || q.userStatus.claimed);
+					return completed && !claimed;
+				});
+
+				if (completedUnclaimed.length > 0) {
+					this.log('info', `Detected ${completedUnclaimed.length} completed unclaimed quest(s), claiming...`);
+					// Claim in background without blocking
+					setTimeout(() => this.claimAllCompletedQuests(), 2000);
+				}
+			}
 		} catch (err) {
 			console.error("FarmQuests: failed to update quests", err);
+		}
+	}
+
+	// Quest change handler like AutoQuestComplete
+	handleQuestChange() {
+		try {
+			const store = this.QuestsStore ?? getQuestsStore();
+			if (!store) return;
+			
+			const quest = [...(store.quests?.values?.() || [])].find(x =>
+				x.id !== "1248385850622869556" &&
+				x.userStatus?.enrolledAt &&
+				!x.userStatus?.completedAt &&
+				new Date(x.config.expiresAt).getTime() > Date.now()
+			);
+
+			if (quest && quest.config.application.id !== this._activeQuestId) {
+				this._activeQuestId = quest.config.application.id;
+				this._activeQuestName = quest.config.application.name;
+				this.log('info', `New quest detected: ${this._activeQuestName}`);
+				UI.showToast(`New quest found: ${this._activeQuestName}`, {type:"info"});
+				// Trigger quest update
+				this.updateQuests();
+			}
+		} catch (e) {
+			this.log('debug', 'handleQuestChange error', e.message);
+		}
+	}
+
+	// New quest detection like AutoQuestComplete
+	handleNewQuest() {
+		try {
+			const store = this.QuestsStore ?? getQuestsStore();
+			if (!store) return;
+
+			const new_quest = [...(store.quests?.values?.() || [])].find(x =>
+				x.id !== "1248385850622869556" &&
+				!x.userStatus?.enrolledAt &&
+				!x.userStatus?.completedAt &&
+				new Date(x.config.expiresAt).getTime() > Date.now()
+			);
+
+			if (new_quest && this.settings.questNotifications) {
+				this.showNewQuestNotification(new_quest);
+			}
+		} catch (e) {
+			this.log('debug', 'handleNewQuest error', e.message);
+		}
+	}
+
+	// New quest notification like AutoQuestComplete
+	showNewQuestNotification(quest) {
+		try {
+			const questName = quest?.config?.application?.name ?? 'Unknown Quest';
+			if (typeof UI.showNotification === 'function') {
+				UI.showNotification({
+					title: 'New Quest Available!',
+					content: `Please accept the quest "${questName}" to start auto farming.`,
+					type: 'info',
+					duration: 5 * 60 * 1000,
+					actions: [
+						{
+							label: 'Go to Quests',
+							onClick: () => {
+								try {
+									open(`/quests/${quest.id}`);
+								} catch (e) {
+									this.log('warn', 'Failed to open quest', e.message);
+								}
+							}
+						},
+						{
+							label: 'Remind Me Later',
+							onClick: () => {
+								setTimeout(() => {
+									this.showNewQuestNotification(quest);
+								}, 60 * 60 * 1000);
+							}
+						}
+					]
+				});
+			} else {
+				UI.showToast(`New quest available: ${questName}`, { type: 'info' });
+			}
+		} catch (e) {
+			this.log('debug', 'Failed to show new quest notification', e.message);
+		}
+	}
+
+	// Complete video quest without watching - proven method from AutoQuestComplete
+	async completeVideoQuest(quest, secondsNeeded, secondsDone) {
+		try {
+			if (!quest || !quest.id) {
+				this.log('warn', 'Invalid quest for video completion');
+				return;
+			}
+
+			// Get FRESH references like AutoQuestComplete does inside runQuest()
+			const apiInstance = Webpack.getModule?.(m => m?.tn?.get)?.tn ?? this.api ?? api;
+			if (!apiInstance) {
+				this.log('error', 'API not available for video quest completion');
+				return;
+			}
+
+			this.log('info', `Completing video quest ${quest.id} (${quest.config?.messages?.questName || 'Unknown'})`);
+			
+			const maxPreview = 10; // Max seconds ahead of actual time
+			const speed = 7; // Seconds to progress per interval
+			const intervalTime = 1; // Seconds between updates
+			const enrolledAt = new Date(quest.userStatus?.enrolledAt || Date.now()).getTime();
+			let isFinished = false;
+
+			// Fast video completion loop
+			while (true) {
+				try {
+					// Calculate how much we can progress based on enrollment time
+					const maxAllowedTime = Math.floor((Date.now() - enrolledAt) / 1000) + maxPreview;
+					const diff = maxAllowedTime - secondsDone;
+					const timestamp = secondsDone + speed;
+
+					// Progress if we're within allowed time
+					if (diff >= speed) {
+						const response = await apiInstance.post({
+							url: `/quests/${quest.id}/video-progress`,
+							body: { timestamp: Math.min(secondsNeeded, timestamp + Math.random()) }
+						});
+						
+						// Check if quest is marked as completed
+						isFinished = response?.body?.completed_at != null;
+						secondsDone = Math.min(secondsNeeded, timestamp);
+						
+						this.log('debug', `Video progress: ${secondsDone}/${secondsNeeded}`, isFinished ? '(completed)' : '');
+					}
+
+					// Break if we've reached the target
+					if (timestamp >= secondsNeeded) {
+						break;
+					}
+
+					// Wait before next update
+					await new Promise(resolve => setTimeout(resolve, intervalTime * 1000));
+				} catch (e) {
+					this.log('warn', 'Video progress update error', e.message);
+					// Continue trying even if one update fails
+					await new Promise(resolve => setTimeout(resolve, intervalTime * 1000));
+				}
+			}
+
+			// Final completion call if not already marked finished
+			if (!isFinished) {
+				try {
+					await apiInstance.post({
+						url: `/quests/${quest.id}/video-progress`,
+						body: { timestamp: secondsNeeded }
+					});
+					this.log('info', 'Sent final video completion');
+				} catch (e) {
+					this.log('warn', 'Final video completion failed', e.message);
+				}
+			}
+
+			// Auto-claim rewards if enabled
+			if (this.settings.autoClaimRewards) {
+                this.log('info', 'Auto-claim is enabled, waiting for server to process completion...');
+                await new Promise(resolve => setTimeout(resolve, 3000)); // Wait for server to process
+                const claimed = await this.claimQuestRewards(quest);
+                if (!claimed) {
+                    this.log('warn', 'Auto-claim failed, you may need to claim manually');
+                    UI.showToast('Quest completed but auto-claim failed. Please claim manually.', { type: 'warning', duration: 5000 });
+                }
+            }
+
+			// Verify completion if enabled
+			if (this.settings.verifyQuestCompletion) {
+				await new Promise(resolve => setTimeout(resolve, 500));
+				const verification = await this.verifyQuestCompleted(quest.id);
+				if (verification) {
+					const status = verification.completed && verification.claimed ? 'completed and claimed' : 
+								  verification.completed ? 'completed but not claimed' : 'incomplete';
+					this.log('info', `Video quest ${quest.id} status: ${status}`);
+				}
+			}
+
+
+			// Clean up
+			if (this.farmingQuest.has(quest.id)) {
+				this.farmingQuest.delete(quest.id);
+			}
+
+			this.showQuestNotification(quest, true);
+			this.log('info', 'Video quest completed successfully', quest.id);
+			UI.showToast(`Quest completed: ${quest.config?.messages?.questName || quest.config?.application?.name}!`, { type: 'success' });
+
+		} catch (err) {
+			this.log('error', 'completeVideoQuest failed', err.message);
+			if (this.farmingQuest.has(quest.id)) {
+				this.farmingQuest.set(quest.id, false);
+			}
 		}
 	}
 
@@ -664,15 +1435,138 @@ module.exports = class BasePlugin {
 		console.log("Stopped farming all quests.");
 	}
 
-		// Attempt to complete video quests without actually watching the video
-		async completeWithoutWatch(quest) {
-			try {
-			if (!quest || !quest.id) {
-				this.log('warn', "Invalid quest passed to completeWithoutWatch");
-				return;
-			}
-			this.ensureStores();
-			const store = this.QuestsStore ?? getQuestsStore();
+    // Verify quest completion status
+    async verifyQuestCompleted(questId) {
+        try {
+            const store = this.QuestsStore ?? getQuestsStore();
+            if (!store) return false;
+
+            let quest = null;
+            if (store.quests && typeof store.quests.get === 'function') {
+                quest = store.quests.get(questId);
+            } else if (typeof store.getQuest === 'function') {
+                quest = store.getQuest(questId);
+            } else if (typeof store.getAll === 'function') {
+                const all = store.getAll();
+                quest = Array.isArray(all) ? all.find(q => q && q.id === questId) : (all || {})[questId];
+            }
+
+            if (!quest) return false;
+
+            // Check if completed
+            const completed = !!(quest.userStatus?.completedAt || quest.userStatus?.completed_at || quest.userStatus?.completed);
+            // Check if claimed
+            const claimed = !!(quest.userStatus?.claimedAt || quest.userStatus?.claimed_at || quest.userStatus?.claimed);
+            
+            this.log('debug', `Quest ${questId} verification: completed=${completed}, claimed=${claimed}`);
+            return { completed, claimed, quest };
+        } catch (e) {
+            this.log('warn', 'verifyQuestCompleted failed', e.message);
+            return false;
+        }
+    }
+
+    // Claim quest rewards with retry logic
+    async claimQuestRewards(quest, retryCount = 0) {
+        const maxRetries = Math.max(1, Number(this.settings.claimRetryAttempts ?? 3));
+        
+        try {
+            if (!quest || !quest.id) {
+                this.log('warn', 'Invalid quest for claiming');
+                return false;
+            }
+
+            this.log('info', `Attempting to claim rewards for quest ${quest.id}`, retryCount > 0 ? `(retry ${retryCount}/${maxRetries})` : '');
+
+            // Method 1: Use store methods
+            const store = this.QuestsStore ?? getQuestsStore();
+            if (store && typeof store.claimReward === 'function') {
+                try {
+                    await store.claimReward(quest.id);
+                    this.log('info', 'Claimed reward via store.claimReward');
+                } catch (e) {
+                    this.log('debug', 'store.claimReward failed', e.message);
+                }
+            }
+
+            // Method 2: Use API endpoints
+            if (this.api ?? api) {
+                const apiInstance = this.api ?? api;
+                const endpoints = [
+                    { url: `/quests/${quest.id}/claim-reward`, body: {} },
+                    { url: `/quests/${quest.id}/claim`, body: {} },
+                    { url: `/quests/${quest.id}/rewards/claim`, body: {} }
+                ];
+
+                for (const endpoint of endpoints) {
+                    try {
+                        this.log('debug', `Trying to claim via ${endpoint.url}`);
+                        const response = await apiInstance.post(endpoint);
+                        
+                        if (response) {
+                            this.log('info', `Claim response from ${endpoint.url}:`, response.status || 'success');
+                            
+                            // Verify claim after short delay
+                            await new Promise(resolve => setTimeout(resolve, 2000));
+                            const verification = await this.verifyQuestCompleted(quest.id);
+                            
+                            if (verification && verification.claimed) {
+                                this.log('info', `Quest ${quest.id} verified as claimed`);
+                                UI.showToast(`Quest rewards claimed successfully!`, { type: 'success' });
+                                return true;
+                            } else if (verification && !verification.claimed) {
+                                this.log('debug', `Quest completed but not yet claimed, trying next endpoint`);
+                                continue;
+                            }
+                        }
+                    } catch (e) {
+                        this.log('debug', `Claim attempt via ${endpoint.url} failed:`, e.message || e.toString());
+                        // Continue to next endpoint
+                    }
+                }
+            }
+
+            // Verify completion even if claiming methods threw errors
+            await new Promise(resolve => setTimeout(resolve, 1500));
+            const verification = await this.verifyQuestCompleted(quest.id);
+            
+            if (verification && verification.claimed) {
+                this.log('info', `Quest ${quest.id} is already claimed`);
+                return true;
+            }
+
+            // Retry logic with exponential backoff
+            if (retryCount < maxRetries) {
+                const backoffDelay = Math.min(1000 * Math.pow(2, retryCount), 10000);
+                this.log('info', `Retrying claim in ${backoffDelay}ms...`);
+                await new Promise(resolve => setTimeout(resolve, backoffDelay));
+                return await this.claimQuestRewards(quest, retryCount + 1);
+            }
+
+            this.log('warn', `Failed to claim rewards for quest ${quest.id} after ${maxRetries} attempts`);
+            return false;
+        } catch (err) {
+            this.log('error', 'claimQuestRewards error', err.message);
+            
+            if (retryCount < maxRetries) {
+                const backoffDelay = Math.min(1000 * Math.pow(2, retryCount), 10000);
+                await new Promise(resolve => setTimeout(resolve, backoffDelay));
+                return await this.claimQuestRewards(quest, retryCount + 1);
+            }
+            
+            return false;
+        }
+    }
+
+    // Attempt to complete video quests without actually watching the video
+    async completeWithoutWatch(quest) {
+        try {
+            if (!quest || !quest.id) {
+                this.log('warn', "Invalid quest passed to completeWithoutWatch");
+                return;
+            }
+            this.ensureStores();
+            const store = this.QuestsStore ?? getQuestsStore();
 			const tryCall = async (fnName, ...args) => {
 				try {
 					if (store && typeof store[fnName] === 'function') {
@@ -710,8 +1604,8 @@ module.exports = class BasePlugin {
 						}
 						this.log('info', `Marked quest as completed in-store`, quest.id);
 						try {
-							if (this.DiscordModules && typeof this.DiscordModules.dispatch === 'function') {
-								this.DiscordModules.dispatch({ type: 'FARMQUESTS_QUEST_UPDATED', questId: quest.id });
+							if (this.FluxDispatcher && typeof this.FluxDispatcher.dispatch === 'function') {
+								this.FluxDispatcher.dispatch({ type: 'FARMQUESTS_QUEST_UPDATED', questId: quest.id });
 							}
 						} catch (e) { /* ignore */ }
 					}
@@ -744,7 +1638,24 @@ module.exports = class BasePlugin {
 				}
 			} catch (e) { /* ignore */ }
 
+			// Auto-claim rewards if enabled
+			if (this.settings.autoClaimRewards) {
+				this.log('info', 'Starting auto-claim process for', quest.id);
+				await this.claimQuestRewards(quest);
+			}
+
+			// Verify completion if enabled
+			if (this.settings.verifyQuestCompletion) {
+				const verification = await this.verifyQuestCompleted(quest.id);
+				if (verification) {
+					const status = verification.completed && verification.claimed ? 'completed and claimed' : 
+								  verification.completed ? 'completed but not claimed' : 'incomplete';
+					this.log('info', `Quest ${quest.id} status: ${status}`);
+				}
+			}
+
 			if (this.farmingQuest && this.farmingQuest.has(quest.id)) this.farmingQuest.delete(quest.id);
+			this.showQuestNotification(quest, true);
 			this.log('info', 'completeWithoutWatch finished', quest.id);
 		} catch (err) {
 			this.log('error', 'completeWithoutWatch failed', err.message);
@@ -753,6 +1664,13 @@ module.exports = class BasePlugin {
 
 	farmQuest(quest) {
 		try {
+			// Get FRESH references inside farmQuest() like AutoQuestComplete does in runQuest()
+			// This is the KEY fix - AutoQuestComplete gets these fresh every time, not from cached this.* values
+			const ApplicationStreamingStore = Webpack.Stores?.ApplicationStreamingStore ?? this.ApplicationStreamingStore;
+			const RunningGameStore = Webpack.Stores?.RunningGameStore ?? this.RunningGameStore;
+			const FluxDispatcher = Webpack.getByKeys?.('dispatch', 'subscribe', 'register') ?? this.FluxDispatcher;
+			const api = Webpack.getModule?.(m => m?.tn?.get)?.tn ?? this.api;
+			
 			let isApp = typeof DiscordNative !== "undefined";
 			if (!quest) {
 				this.log('warn', "No uncompleted quests available");
@@ -760,7 +1678,7 @@ module.exports = class BasePlugin {
 			}
 
 			if (!api) {
-				this.log('warn', "API module not available â€” some operations may fail");
+				this.log('warn', "API module not available — some operations may fail");
 			}
 
 			const pid = Math.floor(Math.random() * 30000) + 1000;
@@ -789,18 +1707,20 @@ module.exports = class BasePlugin {
 			}
 
 			this.farmingQuest.set(quest.id, true);
+			this.showQuestNotification(quest, false);
 
 			console.log(`Farming quest ${questName} (${quest.id}) - ${taskName} for ${secondsNeeded} seconds.`);
 
 			switch (taskName) {
 				case "WATCH_VIDEO":
 				case "WATCH_VIDEO_ON_MOBILE":
-					this.completeWithoutWatch(quest);
+					// Use proven video completion method from AutoQuestComplete
+					this.completeVideoQuest(quest, secondsNeeded, secondsDone);
 					break;
 
 				case "PLAY_ON_DESKTOP":
-						if (!api) { console.error("FarmQuests: missing API for PLAY_ON_DESKTOP"); break; }
-						api.get({ url: `/applications/public?application_ids=${applicationId}` }).then(res => {
+					if (!api) { console.error("FarmQuests: missing API for PLAY_ON_DESKTOP"); break; }
+					api.get({ url: `/applications/public?application_ids=${applicationId}` }).then(res => {
 							const appData = res.body[0];
 							const exeEntry = (appData.executables || []).find(x => x.os === "win32") || (appData.executables || [])[0];
 							const exeName = (exeEntry?.name ?? "app.exe").replace(">", "");
@@ -821,7 +1741,7 @@ module.exports = class BasePlugin {
 							const realGames = this.fakeGames.size == 0 && this.RunningGameStore?.getRunningGames ? this.RunningGameStore.getRunningGames() : [];
 							this.fakeGames.set(quest.id, fakeGame);
 							const fakeGames = Array.from(this.fakeGames.values());
-							(this.DiscordModules ?? DiscordModules)?.dispatch({ type: "RUNNING_GAMES_CHANGE", removed: realGames, added: [fakeGame], games: fakeGames });
+							(this.FluxDispatcher ?? FluxDispatcher)?.dispatch({ type: "RUNNING_GAMES_CHANGE", removed: realGames, added: [fakeGame], games: fakeGames });
 
 							let playOnDesktop = (event) => {
 								if (event.questId !== quest.id) return;
@@ -834,22 +1754,24 @@ module.exports = class BasePlugin {
 									this.fakeGames.delete(quest.id);
 									const games = this.RunningGameStore?.getRunningGames ? this.RunningGameStore.getRunningGames() : [];
 									const added = this.fakeGames.size == 0 ? games : [];
-									(this.DiscordModules ?? DiscordModules)?.dispatch({ type: "RUNNING_GAMES_CHANGE", removed: [fakeGame], added: added, games: games });
-									(this.DiscordModules ?? DiscordModules)?.unsubscribe("QUESTS_SEND_HEARTBEAT_SUCCESS", playOnDesktop);
+									(this.FluxDispatcher ?? FluxDispatcher)?.dispatch({ type: "RUNNING_GAMES_CHANGE", removed: [fakeGame], added: added, games: games });
+									(this.FluxDispatcher ?? FluxDispatcher)?.unsubscribe("QUESTS_SEND_HEARTBEAT_SUCCESS", playOnDesktop);
 
 									if (progress >= secondsNeeded) {
 										console.log("Quest completed!");
+										this.showQuestNotification(quest, true);
 										this.farmingQuest.set(quest.id, false);
 									}
 								}
 							}
-							(this.DiscordModules ?? DiscordModules)?.subscribe("QUESTS_SEND_HEARTBEAT_SUCCESS", playOnDesktop);
+							(this.FluxDispatcher ?? FluxDispatcher)?.subscribe("QUESTS_SEND_HEARTBEAT_SUCCESS", playOnDesktop);
+							this._registerSubscription("QUESTS_SEND_HEARTBEAT_SUCCESS", playOnDesktop);
 
 							let fallbackInterval = null;
 							let fallbackAttempts = 0;
 							const startFallback = () => {
 								if (fallbackInterval) return;
-								fallbackInterval = setInterval(async () => {
+								fallbackInterval = this._registerInterval(setInterval(async () => {
 									try {
 										if (!this.farmingQuest.get(quest.id)) return;
 										this.ensureStores();
@@ -890,116 +1812,119 @@ module.exports = class BasePlugin {
 											}
 
 											if (fallbackInterval) {
-												clearInterval(fallbackInterval);
+												this._clearInterval(fallbackInterval);
 												fallbackInterval = null;
 											}
 
 											if (this.fakeGames.has(quest.id)) this.fakeGames.delete(quest.id);
 											const games = this.RunningGameStore?.getRunningGames ? this.RunningGameStore.getRunningGames() : [];
 											const added = this.fakeGames.size == 0 ? games : [];
-											(this.DiscordModules ?? DiscordModules)?.dispatch({ type: "RUNNING_GAMES_CHANGE", removed: [fakeGame], added: added, games: games });
-											(this.DiscordModules ?? DiscordModules)?.unsubscribe("QUESTS_SEND_HEARTBEAT_SUCCESS", playOnDesktop);
+											(this.FluxDispatcher ?? FluxDispatcher)?.dispatch({ type: "RUNNING_GAMES_CHANGE", removed: [fakeGame], added: added, games: games });
+											(this.FluxDispatcher ?? FluxDispatcher)?.unsubscribe("QUESTS_SEND_HEARTBEAT_SUCCESS", playOnDesktop);
 											this.farmingQuest.set(quest.id, false);
 											return;
 										}
 									} catch (e) { /* ignore */ }
-								}, 20 * 1000);
+								}, 20 * 1000));
 							};
 
 							startFallback();
 
 							console.log(`Spoofed your game to ${applicationName}. Wait for ${Math.ceil((secondsNeeded - secondsDone) / 60)} more minutes.`);
-						})
-						break;
+					})
+					break;
 
-					case "STREAM_ON_DESKTOP":
-						const fakeApp = {
-							id: applicationId,
-							name: `FakeApp ${applicationName} (FarmQuests)`,
-							pid: pid,
-							sourceName: null,
-						};
-						this.fakeApplications.set(quest.id, fakeApp);
+				case "STREAM_ON_DESKTOP":
+					const fakeApp = {
+						id: applicationId,
+						name: `FakeApp ${applicationName} (FarmQuests)`,
+						pid: pid,
+						sourceName: null,
+					};
+					this.fakeApplications.set(quest.id, fakeApp);
 
-						let streamOnDesktop = (event) => {
-							if (event.questId !== quest.id) return;
-							let progress = quest.config.configVersion === 1 ? event.userStatus.streamProgressSeconds : Math.floor(event.userStatus.progress.STREAM_ON_DESKTOP.value);
+					let streamOnDesktop = (event) => {
+						if (event.questId !== quest.id) return;
+						let progress = quest.config.configVersion === 1 ? event.userStatus.streamProgressSeconds : Math.floor(event.userStatus.progress.STREAM_ON_DESKTOP.value);
+						console.log(`Quest progress ${questName}: ${progress}/${secondsNeeded}`);
+
+						if (!this.farmingQuest.get(quest.id) || progress >= secondsNeeded) {
+							console.log("Stopping farming quest:", questName);
+
+							this.fakeApplications.delete(quest.id);
+							(this.FluxDispatcher ?? FluxDispatcher)?.unsubscribe("QUESTS_SEND_HEARTBEAT_SUCCESS", streamOnDesktop);
+
+							if (progress >= secondsNeeded) {
+								console.log("Quest completed!");
+								this.showQuestNotification(quest, true);
+								this.farmingQuest.set(quest.id, false);
+							}
+						}
+					}
+					(this.FluxDispatcher ?? FluxDispatcher)?.subscribe("QUESTS_SEND_HEARTBEAT_SUCCESS", streamOnDesktop);
+					this._registerSubscription("QUESTS_SEND_HEARTBEAT_SUCCESS", streamOnDesktop);
+
+					console.log(`Spoofed your stream to ${applicationName}. Stream any window in vc for ${Math.ceil((secondsNeeded - secondsDone) / 60)} more minutes.`);
+					console.log("Remember that you need at least 1 other person to be in the vc!");
+					break;
+
+				case "PLAY_ACTIVITY":
+					let channelId = null;
+					try {
+						const privateChannels = (this.ChannelStore?.getSortedPrivateChannels?.() ?? this.ChannelStore?.getSortedPrivateChannels ?? ChannelStore?.getSortedPrivateChannels?.() ?? ChannelStore?.getSortedPrivateChannels) ?? [];
+						channelId = privateChannels?.[0]?.id ?? null;
+					} catch(e) { /* ignore */ }
+
+					if (!channelId) {
+						const guildsObj = (typeof (this.GuildChannelStore?.getAllGuilds) === "function") ? this.GuildChannelStore.getAllGuilds() : (typeof (GuildChannelStore?.getAllGuilds) === "function" ? GuildChannelStore.getAllGuilds() : (this.GuildChannelStore ?? GuildChannelStore) ?? {});
+						const guilds = guildsObj ?? {};
+
+						for (const g of Object.values(guilds || {})) {
+							const vocals = g?.VOCAL ?? g?.voiceChannels ?? [];
+							if (vocals?.length > 0 && vocals[0]?.channel?.id) {
+								channelId = vocals[0].channel.id;
+								break;
+							}
+						}
+					}
+
+					if (!channelId) {
+						console.error("FarmQuests: no suitable channel found for PLAY_ACTIVITY quest. Aborting this quest.");
+						this.farmingQuest.set(quest.id, false);
+						return;
+					}
+					const streamKey = `call:${channelId}:1`;
+
+					let playActivity = async () => {
+						console.log("Completing quest", questName, "-", quest.config.messages.questName);
+
+						while (true) {
+							const res = await (this.api ?? api)?.post({ url: `/quests/${quest.id}/heartbeat`, body: { stream_key: streamKey, terminal: false } });
+							const progress = res.body.progress.PLAY_ACTIVITY.value;
 							console.log(`Quest progress ${questName}: ${progress}/${secondsNeeded}`);
+
+							await new Promise(resolve => setTimeout(resolve, 20 * 1000));
 
 							if (!this.farmingQuest.get(quest.id) || progress >= secondsNeeded) {
 								console.log("Stopping farming quest:", questName);
 
-								this.fakeApplications.delete(quest.id);
-								(this.DiscordModules ?? DiscordModules)?.unsubscribe("QUESTS_SEND_HEARTBEAT_SUCCESS", streamOnDesktop);
-
 								if (progress >= secondsNeeded) {
-									console.log("Quest completed!");
+									await (this.api ?? api)?.post({ url: `/quests/${quest.id}/heartbeat`, body: { stream_key: streamKey, terminal: true } });
+									console.log("Quest completed!")
+									this.showQuestNotification(quest, true);
 									this.farmingQuest.set(quest.id, false);
 								}
+								break;
 							}
 						}
-						(this.DiscordModules ?? DiscordModules)?.subscribe("QUESTS_SEND_HEARTBEAT_SUCCESS", streamOnDesktop)
+					}
+					playActivity();
+					break;
 
-						console.log(`Spoofed your stream to ${applicationName}. Stream any window in vc for ${Math.ceil((secondsNeeded - secondsDone) / 60)} more minutes.`);
-						console.log("Remember that you need at least 1 other person to be in the vc!");
-						break;
-
-					case "PLAY_ACTIVITY":
-						let channelId = null;
-						try {
-							const privateChannels = (this.ChannelStore?.getSortedPrivateChannels?.() ?? this.ChannelStore?.getSortedPrivateChannels ?? ChannelStore?.getSortedPrivateChannels?.() ?? ChannelStore?.getSortedPrivateChannels) ?? [];
-							channelId = privateChannels?.[0]?.id ?? null;
-						} catch(e) { /* ignore */ }
-
-						if (!channelId) {
-							const guildsObj = (typeof (this.GuildChannelStore?.getAllGuilds) === "function") ? this.GuildChannelStore.getAllGuilds() : (typeof (GuildChannelStore?.getAllGuilds) === "function" ? GuildChannelStore.getAllGuilds() : (this.GuildChannelStore ?? GuildChannelStore) ?? {});
-							const guilds = guildsObj ?? {};
-
-							for (const g of Object.values(guilds || {})) {
-								const vocals = g?.VOCAL ?? g?.voiceChannels ?? [];
-								if (vocals?.length > 0 && vocals[0]?.channel?.id) {
-									channelId = vocals[0].channel.id;
-									break;
-								}
-							}
-						}
-
-						if (!channelId) {
-							console.error("FarmQuests: no suitable channel found for PLAY_ACTIVITY quest. Aborting this quest.");
-							this.farmingQuest.set(quest.id, false);
-							return;
-						}
-						 const streamKey = `call:${channelId}:1`;
-
-						let playActivity = async () => {
-							console.log("Completing quest", questName, "-", quest.config.messages.questName);
-
-							while (true) {
-								const res = await (this.api ?? api)?.post({ url: `/quests/${quest.id}/heartbeat`, body: { stream_key: streamKey, terminal: false } });
-								const progress = res.body.progress.PLAY_ACTIVITY.value;
-								console.log(`Quest progress ${questName}: ${progress}/${secondsNeeded}`);
-
-								await new Promise(resolve => setTimeout(resolve, 20 * 1000));
-
-								if (!this.farmingQuest.get(quest.id) || progress >= secondsNeeded) {
-									console.log("Stopping farming quest:", questName);
-
-									if (progress >= secondsNeeded) {
-										await (this.api ?? api)?.post({ url: `/quests/${quest.id}/heartbeat`, body: { stream_key: streamKey, terminal: true } });
-										console.log("Quest completed!")
-									 this.farmingQuest.set(quest.id, false);
-									}
-									break;
-								}
-							}
-						}
-						playActivity();
-						break;
-
-					default:
-						console.error("Unknown task type:", taskName);
-						this.farmingQuest.set(quest.id, false);
-						break;
+				default:
+					console.error("Unknown task type:", taskName);
+					this.farmingQuest.set(quest.id, false);
+					break;
 			}
 		} catch (err) {
 			console.error("FarmQuests: error inside farmQuest", err);

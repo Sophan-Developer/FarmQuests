@@ -1,12 +1,33 @@
 # FarmQuests Plugin - Robustness Update Complete ✅
 
-## What Was Updated
+## What Was Updated (v1.6.1 - January 2026)
 
-Your FarmQuests plugin has been comprehensively enhanced with **13 configurable settings**, **robust error handling, unified logging, and automatic settings initialization** to prevent future errors.
+Your FarmQuests plugin has been comprehensively enhanced with **13 configurable settings**, **robust error handling, unified logging, memory leak fixes, and automatic settings initialization** to prevent future errors.
 
 ### Major Improvements Summary
 
-#### 1. **Unified Logging System** 
+#### 1. **Critical Bug Fixes (v1.6.1)**
+- Fixed syntax error in API module resolution (incomplete else statement)
+- Fixed version comparison logic in update checker (was inverted)
+- Fixed memory leaks - intervals and Flux subscriptions now properly cleaned up
+- Added null-safety guards in webpack module finder
+
+#### 2. **New Debug Features**
+- `getDebugInfo()` - Returns plugin state in copyable JSON format
+- `copyDebugInfo()` - One-click copy of debug info to clipboard
+- `showErrorNotice()` - User-friendly error messages with "Copy Debug Info" button
+
+#### 3. **Cleanup Registry System**
+All intervals, timeouts, and Flux subscriptions are now tracked and properly cleaned up:
+```javascript
+this._cleanupRegistry = {
+    intervals: new Set(),
+    timeouts: new Set(),
+    subscriptions: new Map()
+};
+```
+
+#### 4. **Unified Logging System** 
 All console messages now use the `[FarmQuests]` prefix for easy identification. The new `log()` method:
 - Automatically checks `enableVerboseLogging` setting
 - Filters debug messages when verbose mode is off
@@ -170,9 +191,10 @@ If any setting gets corrupted, these defaults will be restored:
 
 ## 📝 Version Info
 
-- **Plugin Version:** 1.0.5
-- **Enhancement Date:** 2024
+- **Plugin Version:** 1.6.1
+- **Last Updated:** January 2026
 - **Robustness Update:** Complete
+- **Memory Leak Fixes:** ✅ Yes
 - **Backward Compatible:** ✅ Yes
 
 ---

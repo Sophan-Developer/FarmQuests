@@ -2,7 +2,7 @@
 
 A BetterDiscord plugin that automatically farms multiple Discord quests in the background simultaneously.
 
-**Version:** 1.0.5  
+**Version:** 1.6.1  
 **Author:** Sophan-Developer  
 **Based on:** [aamiaa's original script](https://gist.github.com/aamiaa/204cd9d42013ded9faf646fae7f89fbb)
 
@@ -15,10 +15,12 @@ A BetterDiscord plugin that automatically farms multiple Discord quests in the b
   - `STREAM_ON_DESKTOP` – Spoofs stream activity
   - `PLAY_ACTIVITY` – Farms activity quests in voice channels
 - 🔄 **Smart quest detection** – Automatically detects and starts new quests
-- ⚙️ **Highly configurable** – Fine-tune farming behavior with 10+ settings
+- ⚙️ **Highly configurable** – Fine-tune farming behavior with 13+ settings
 - 📊 **Progress tracking** – Monitor quest completion progress
 - 🛡️ **Fallback mechanisms** – Multiple layers of task completion to ensure success
 - 🔇 **Verbose logging** – Optional debug output for troubleshooting
+- 📋 **Copy Debug Info** – One-click copy of debug info for troubleshooting
+- 🧹 **Memory safe** – Proper cleanup of intervals/subscriptions on stop
 
 ## Installation
 
@@ -156,6 +158,23 @@ A: Yes! Adjust the **Concurrent farms** setting. Default is 3, meaning up to 3 q
 - 🔧 **Source:** [BetterDiscord-Stuff Repository](https://github.com/Sophan-Developer/FarmQuests)
 
 ## Changelog
+
+**v1.6.1** (Jan 2026)
+- Fixed syntax error in API module resolution
+- Fixed version comparison logic in update checker
+- Fixed memory leaks - intervals and Flux subscriptions now properly cleaned up
+- Added null-safety guards in webpack module finder
+- Added 'Copy Debug Info' feature for easier troubleshooting
+- Added user-friendly error notices with debug option
+- Added cleanup registry to track all intervals/timeouts/subscriptions
+- Better error handling when Discord modules are missing
+- Improved stop() cleanup to prevent resource leaks
+
+**v1.6.0** (Jan 2026)
+- Updated webpack module selectors for Discord's January 2026 update
+- Fixed 'Cannot read properties of undefined (reading exports)' error
+- Updated ApplicationStreamingStore, RunningGameStore, QuestsStore selectors
+- More robust store resolution with multiple fallback patterns
 
 **v1.0.5**
 - Added maxFallbackAttempts setting
