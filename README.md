@@ -22,16 +22,59 @@ A BetterDiscord plugin that automatically farms multiple Discord quests in the b
 - 📋 **Copy Debug Info** – One-click copy of debug info for troubleshooting
 - 🧹 **Memory safe** – Proper cleanup of intervals/subscriptions on stop
 
-## Installation
+## Prerequisites
 
-1. Download `FarmQuests.plugin.js` and place it in:
-   ```
-   C:\Users\[YourUsername]\AppData\Roaming\BetterDiscord\plugins\
-   ```
+### Installing BetterDiscord
 
-2. Enable the plugin in BetterDiscord's plugin settings
+This plugin requires BetterDiscord to be installed. If you don't have it yet:
 
-3. Reload Discord (`Ctrl+R`)
+1. **Download BetterDiscord:**
+   - Visit the official website: [https://betterdiscord.app](https://betterdiscord.app)
+   - Click the "Download" button
+   - Choose your operating system (Windows, macOS, or Linux)
+
+2. **Install BetterDiscord:**
+   - **Windows:** Run the downloaded `.exe` installer and follow the prompts
+   - **macOS:** Open the `.dmg` file and drag BetterDiscord to Applications
+   - **Linux:** Extract the `.AppImage` or follow distro-specific instructions
+
+3. **Verify Installation:**
+   - Open Discord (or restart if already open)
+   - Go to User Settings (gear icon)
+   - Look for "BetterDiscord" or "Plugins" in the sidebar
+   - If you see these options, BetterDiscord is installed correctly!
+
+> ⚠️ **Important:** BetterDiscord modifies the Discord client. While generally safe, use it at your own risk. Discord's Terms of Service technically prohibit client modifications.
+
+## Plugin Installation
+
+Once BetterDiscord is installed:
+
+1. **Download the Plugin:**
+   - Download `FarmQuests.plugin.js` from the [releases page](https://github.com/Sophan-Developer/FarmQuests/releases)
+   - Or get it from the [source](https://raw.githubusercontent.com/Sophan-Developer/FarmQuests/main/FarmQuests.plugin.js)
+
+2. **Install the Plugin:**
+   - Place `FarmQuests.plugin.js` in your BetterDiscord plugins folder:
+     - **Windows:** `C:\Users\[YourUsername]\AppData\Roaming\BetterDiscord\plugins\`
+     - **macOS:** `~/Library/Application Support/BetterDiscord/plugins/`
+     - **Linux:** `~/.config/BetterDiscord/plugins/`
+   
+   > 💡 **Quick Access:** In Discord, go to User Settings → Plugins → Open Plugins Folder
+
+3. **Enable the Plugin:**
+   - Go to User Settings → Plugins
+   - Find "FarmQuests" in the list
+   - Toggle it ON
+
+4. **Reload Discord:**
+   - Press `Ctrl+R` (Windows/Linux) or `Cmd+R` (macOS)
+   - Or restart Discord completely
+
+5. **Verify Installation:**
+   - Open User Settings → Plugins
+   - Click the settings icon (⚙️) next to FarmQuests
+   - You should see the modern tabbed settings interface
 
 ## Settings
 
