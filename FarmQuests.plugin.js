@@ -37,26 +37,41 @@ const config = {
     ],
     settings: [
         // ═══════════════════════════════════════════════════════════════
-        // PAGE 1: Main Quest Settings (Auto-farming behavior)
+        // PAGE 1: Automation Settings
         // ═══════════════════════════════════════════════════════════════
-        { type: "switch", id: "acceptQuestsAutomatically", name: "🎯 Auto Accept Quests", note: "Automatically accept new available quests", value: true, page: 1 },
-        { type: "switch", id: "autoCompleteAllQuests", name: "⚡ Auto Complete Quests", note: "Automatically complete all quests (video/play/stream)", value: true, page: 1 },
-        { type: "switch", id: "autoClaimRewards", name: "🎁 Auto Claim Rewards", note: "Automatically claim quest rewards after completion", value: true, page: 1 },
-        { type: "switch", id: "retryFailedQuests", name: "🔄 Retry Failed Quests", note: "Automatically retry quests that fail to complete", value: true, page: 1 },
-        { type: "switch", id: "questNotifications", name: "🔔 Quest Notifications", note: "Show notifications for quest progress and completion", value: true, page: 1 },
-        { type: "switch", id: "autoStartVideoQuests", name: "▶️ Auto Start Video Quests", note: "Automatically click 'Start Video Quest' button when available", value: true, page: 1 },
+        { type: "header", text: "⚙️ Quest Automation", page: 1 },
+        { type: "switch", id: "acceptQuestsAutomatically", name: "Auto Accept Quests", note: "Automatically accept new available quests when they appear", value: true, page: 1 },
+        { type: "switch", id: "autoCompleteAllQuests", name: "Auto Complete Quests", note: "Automatically complete all quest types (video, play, stream)", value: true, page: 1 },
+        { type: "switch", id: "autoClaimRewards", name: "Auto Claim Rewards", note: "Claim quest rewards automatically after completion", value: true, page: 1 },
+        { type: "switch", id: "autoStartVideoQuests", name: "Auto Start Video Quests", note: "Click 'Start Video Quest' button automatically", value: true, page: 1 },
+        { type: "divider", page: 1 },
+        
+        { type: "header", text: "🔄 Retry & Recovery", page: 1 },
+        { type: "switch", id: "retryFailedQuests", name: "Retry Failed Quests", note: "Automatically retry quests that fail to complete", value: true, page: 1 },
+        { type: "switch", id: "verifyQuestCompletion", name: "Verify Quest Completion", note: "Double-check that quests are properly completed and claimed", value: true, page: 1 },
+        { type: "number", id: "claimRetryAttempts", name: "Claim Retry Attempts", note: "Number of times to retry claiming rewards if it fails", value: 3, min: 1, max: 10, step: 1, page: 1 },
+        { type: "divider", page: 1 },
+        
+        { type: "header", text: "🔔 Notifications & UI", page: 1 },
+        { type: "switch", id: "questNotifications", name: "Quest Notifications", note: "Show desktop notifications for quest progress and completion", value: true, page: 1 },
+        { type: "switch", id: "suppressQuestProgressPill", name: "Hide Progress Pill", note: "Hide the quest progress notification pill in Discord UI", value: false, page: 1 },
         
         // ═══════════════════════════════════════════════════════════════
-        // PAGE 2: Advanced Settings (Timing & Technical)
+        // PAGE 2: Performance & Advanced Settings
         // ═══════════════════════════════════════════════════════════════
-        { type: "number", id: "checkForNewQuests", name: "⏱️ Quest Check Interval (min)", note: "How often to check for new quests (in minutes)", value: 5, min: 1, max: 60, step: 1, page: 2 },
-        { type: "number", id: "concurrentFarms", name: "📊 Max Concurrent Farms", note: "Maximum number of quests to farm simultaneously", value: 3, min: 1, max: 10, step: 1, page: 2 },
-        { type: "number", id: "delayBetweenFarms", name: "⏳ Delay Between Farms (sec)", note: "Delay in seconds between starting each quest", value: 2, min: 0, max: 30, step: 1, page: 2 },
-        { type: "number", id: "maxFallbackAttempts", name: "🔁 Max Fallback Attempts", note: "Maximum heartbeat attempts before forcing completion", value: 30, min: 5, max: 100, step: 5, page: 2 },
-        { type: "number", id: "claimRetryAttempts", name: "🎁 Claim Retry Attempts", note: "Number of times to retry claiming rewards if it fails", value: 3, min: 1, max: 10, step: 1, page: 2 },
-        { type: "switch", id: "verifyQuestCompletion", name: "✅ Verify Quest Completion", note: "Double-check that quests are properly completed and claimed", value: true, page: 2 },
-        { type: "switch", id: "suppressQuestProgressPill", name: "🚫 Hide Progress Pill", note: "Hide the quest progress notification pill in Discord", value: false, page: 2 },
-        { type: "switch", id: "enableVerboseLogging", name: "📝 Verbose Logging", note: "Enable detailed debug logs in console (for troubleshooting)", value: false, page: 2 }
+        { type: "header", text: "⚡ Performance Settings", page: 2 },
+        { type: "number", id: "concurrentFarms", name: "Max Concurrent Farms", note: "Maximum number of quests to farm simultaneously (higher = faster but more resource usage)", value: 3, min: 1, max: 10, step: 1, page: 2 },
+        { type: "number", id: "delayBetweenFarms", name: "Delay Between Farms", note: "Delay in seconds between starting each quest (prevents rate limiting)", value: 2, min: 0, max: 30, step: 1, page: 2 },
+        { type: "number", id: "checkForNewQuests", name: "Quest Check Interval", note: "How often to check for new quests (in minutes)", value: 5, min: 1, max: 60, step: 1, page: 2 },
+        { type: "divider", page: 2 },
+        
+        { type: "header", text: "🔧 Advanced Technical Settings", page: 2 },
+        { type: "number", id: "maxFallbackAttempts", name: "Max Heartbeat Attempts", note: "Maximum heartbeat attempts before forcing completion (technical)", value: 30, min: 5, max: 100, step: 5, page: 2 },
+        { type: "switch", id: "enableVerboseLogging", name: "Verbose Logging", note: "Enable detailed debug logs in console (for troubleshooting issues)", value: false, page: 2 },
+        { type: "divider", page: 2 },
+        
+        { type: "header", text: "ℹ️ Information", page: 2 },
+        { type: "info", text: "⚠️ Changing advanced settings may affect plugin stability. Default values are recommended for most users.", page: 2 }
     ]
 };
 
@@ -591,155 +606,153 @@ module.exports = class BasePlugin {
 			
 			const createPagedPanel = () => {
 				const container = document.createElement('div');
-				container.style.color = '#fff';
-				container.style.padding = '12px';
+				container.style.cssText = 'padding: 16px; background: var(--background-secondary); border-radius: 8px; max-width: 800px;';
 				
-				// Header
-				const header = document.createElement('div');
-				header.style.marginBottom = '16px';
-				header.style.fontSize = '14px';
-				header.style.fontWeight = '600';
-				header.innerText = `Settings - Page ${currentPage} / 2`;
-				container.appendChild(header);
+				// Page tabs
+				const tabsContainer = document.createElement('div');
+				tabsContainer.style.cssText = 'display: flex; gap: 8px; margin-bottom: 20px; border-bottom: 2px solid var(--background-modifier-accent); padding-bottom: 12px;';
+				
+				const createTab = (label, page) => {
+					const tab = document.createElement('button');
+					tab.textContent = label;
+					const isActive = currentPage === page;
+					tab.style.cssText = `padding: 10px 20px; border: none; border-radius: 6px; background: ${isActive ? 'var(--brand-experiment)' : 'var(--background-tertiary)'}; color: ${isActive ? 'white' : 'var(--text-normal)'}; cursor: pointer; font-weight: ${isActive ? '600' : '400'}; transition: all 0.2s ease; font-size: 14px;`;
+					tab.onmouseenter = () => { if (!isActive) tab.style.background = 'var(--background-modifier-hover)'; };
+					tab.onmouseleave = () => { if (!isActive) tab.style.background = 'var(--background-tertiary)'; };
+					tab.onclick = () => { currentPage = page; container.replaceWith(createPagedPanel()); };
+					return tab;
+				};
+				
+				tabsContainer.appendChild(createTab('⚙️ Automation', 1));
+				tabsContainer.appendChild(createTab('🔧 Advanced', 2));
+				container.appendChild(tabsContainer);
 				
 				// Settings container
 				const settingsContainer = document.createElement('div');
+				settingsContainer.style.cssText = 'display: flex; flex-direction: column; gap: 12px;';
+				
+				const pageSettings = config.settings.filter(s => s.page === currentPage);
+				
+				pageSettings.forEach(setting => {
+					if (setting.type === 'header') {
+						const header = document.createElement('h3');
+						header.textContent = setting.text;
+						header.style.cssText = 'margin: 20px 0 10px 0; font-size: 16px; font-weight: 600; color: var(--header-primary); border-left: 4px solid var(--brand-experiment); padding-left: 12px;';
+						settingsContainer.appendChild(header);
+						return;
+					}
+					
+					if (setting.type === 'divider') {
+						const divider = document.createElement('div');
+						divider.style.cssText = 'height: 1px; background: var(--background-modifier-accent); margin: 12px 0;';
+						settingsContainer.appendChild(divider);
+						return;
+					}
+					
+					if (setting.type === 'info') {
+						const info = document.createElement('div');
+						info.textContent = setting.text;
+						info.style.cssText = 'padding: 12px 16px; background: var(--info-warning-background); border-left: 4px solid var(--info-warning-foreground); border-radius: 4px; color: var(--text-normal); font-size: 13px; line-height: 1.5;';
+						settingsContainer.appendChild(info);
+						return;
+					}
+					
+					const settingRow = document.createElement('div');
+					settingRow.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; background: var(--background-primary); border-radius: 6px; transition: background 0.15s ease;';
+					settingRow.onmouseenter = () => settingRow.style.background = 'var(--background-modifier-hover)';
+					settingRow.onmouseleave = () => settingRow.style.background = 'var(--background-primary)';
+					
+					const labelDiv = document.createElement('div');
+					labelDiv.style.cssText = 'flex: 1;';
+					
+					const label = document.createElement('div');
+					label.textContent = setting.name;
+					label.style.cssText = 'font-weight: 500; color: var(--header-primary); font-size: 15px; margin-bottom: 4px;';
+					
+					const note = document.createElement('div');
+					note.textContent = setting.note;
+					note.style.cssText = 'font-size: 13px; color: var(--text-muted); line-height: 1.4;';
+					
+					labelDiv.appendChild(label);
+					labelDiv.appendChild(note);
+					settingRow.appendChild(labelDiv);
+					
+					if (setting.type === 'switch') {
+						const switchContainer = document.createElement('div');
+						switchContainer.style.cssText = 'position: relative; width: 48px; height: 26px; flex-shrink: 0;';
+						
+						const switchInput = document.createElement('input');
+						switchInput.type = 'checkbox';
+						switchInput.checked = self.settings[setting.id] ?? setting.value;
+						switchInput.style.cssText = 'opacity: 0; width: 0; height: 0; position: absolute;';
+						
+						const slider = document.createElement('span');
+						slider.style.cssText = `position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: ${switchInput.checked ? 'var(--brand-experiment)' : 'var(--background-modifier-accent)'}; border-radius: 34px; transition: 0.3s;`;
+						
+						const knob = document.createElement('span');
+						knob.style.cssText = `position: absolute; content: ''; height: 20px; width: 20px; left: ${switchInput.checked ? '25px' : '3px'}; bottom: 3px; background: white; border-radius: 50%; transition: 0.3s; box-shadow: 0 2px 4px rgba(0,0,0,0.2);`;
+						
+						slider.appendChild(knob);
+						switchContainer.appendChild(switchInput);
+						switchContainer.appendChild(slider);
+						
+						switchInput.onchange = () => {
+							self.settings[setting.id] = switchInput.checked;
+							slider.style.background = switchInput.checked ? 'var(--brand-experiment)' : 'var(--background-modifier-accent)';
+							knob.style.left = switchInput.checked ? '25px' : '3px';
+							if (setting.id === 'autoStartVideoQuests') {
+								if (switchInput.checked) self.startAutoStart(); else self.stopAutoStart();
+							} else if (setting.id === 'checkForNewQuests') {
+								self.startInterval();
+							}
+						};
+						
+						switchContainer.onclick = () => { switchInput.checked = !switchInput.checked; switchInput.onchange(); };
+						settingRow.appendChild(switchContainer);
+					} else if (setting.type === 'number') {
+						const numberInput = document.createElement('input');
+						numberInput.type = 'number';
+						numberInput.value = self.settings[setting.id] ?? setting.value;
+						numberInput.min = setting.min;
+						numberInput.max = setting.max;
+						numberInput.step = setting.step;
+						numberInput.style.cssText = 'width: 80px; padding: 8px 12px; background: var(--input-background); border: 1px solid var(--background-tertiary); border-radius: 4px; color: var(--text-normal); font-size: 14px; text-align: center;';
+						
+						numberInput.oninput = () => {
+							const val = Number(numberInput.value);
+							if (!isNaN(val)) {
+								self.settings[setting.id] = val;
+								if (setting.id === 'checkForNewQuests') self.startInterval();
+							}
+						};
+						
+						settingRow.appendChild(numberInput);
+					}
+					
+					settingsContainer.appendChild(settingRow);
+				});
+				
 				container.appendChild(settingsContainer);
 				
-				// Navigation buttons
-				const navContainer = document.createElement('div');
-				navContainer.style.marginTop = '16px';
-				navContainer.style.display = 'flex';
-				navContainer.style.gap = '8px';
-				navContainer.style.justifyContent = 'space-between';
+				// Footer
+				const footer = document.createElement('div');
+				footer.style.cssText = 'margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--background-modifier-accent); display: flex; justify-content: space-between; align-items: center;';
 				
-				const prevBtn = document.createElement('button');
-				prevBtn.innerText = 'Previous';
-				prevBtn.style.padding = '8px 12px';
-				prevBtn.style.borderRadius = '4px';
-				prevBtn.style.border = '1px solid #72767d';
-				prevBtn.style.backgroundColor = '#2c2f33';
-				prevBtn.style.color = '#fff';
-				prevBtn.style.cursor = 'pointer';
-				prevBtn.style.minWidth = '100px';
-				prevBtn.style.fontWeight = '500';
+				const version = document.createElement('span');
+				version.textContent = `FarmQuests v${config.info.version}`;
+				version.style.cssText = 'font-size: 12px; color: var(--text-muted);';
 				
-				const nextBtn = document.createElement('button');
-				nextBtn.innerText = 'Next';
-				nextBtn.style.padding = '8px 12px';
-				nextBtn.style.borderRadius = '4px';
-				nextBtn.style.border = '1px solid #72767d';
-				nextBtn.style.backgroundColor = '#2c2f33';
-				nextBtn.style.color = '#fff';
-				nextBtn.style.cursor = 'pointer';
-				nextBtn.style.minWidth = '100px';
-				nextBtn.style.fontWeight = '500';
+				const debugBtn = document.createElement('button');
+				debugBtn.textContent = '📋 Copy Debug Info';
+				debugBtn.style.cssText = 'padding: 8px 16px; background: var(--button-secondary-background); color: var(--text-normal); border: none; border-radius: 4px; cursor: pointer; font-size: 13px; transition: background 0.15s;';
+				debugBtn.onmouseenter = () => debugBtn.style.background = 'var(--button-secondary-background-hover)';
+				debugBtn.onmouseleave = () => debugBtn.style.background = 'var(--button-secondary-background)';
+				debugBtn.onclick = () => self.copyDebugInfo();
 				
-				const updatePage = () => {
-					settingsContainer.innerHTML = '';
-					header.innerText = `Settings - Page ${currentPage} / 2`;
-					
-					const pageSettings = config.settings.filter(s => s.page === currentPage);
-					
-					for (const s of pageSettings) {
-						const row = document.createElement('div');
-						row.style.marginBottom = '14px';
-						const label = document.createElement('label');
-						label.style.display = 'block';
-						label.style.fontWeight = '600';
-						label.style.marginBottom = '4px';
-						label.innerText = s.name || s.id;
-						row.appendChild(label);
-						
-						if (s.note) {
-							const note = document.createElement('div');
-							note.style.fontSize = '12px';
-							note.style.opacity = '0.7';
-							note.style.marginBottom = '6px';
-							note.innerText = s.note;
-							row.appendChild(note);
-						}
-						
-						if (s.type === 'number') {
-							const input = document.createElement('input');
-							input.type = 'number';
-							if (typeof s.min !== 'undefined') input.min = s.min;
-							if (typeof s.step !== 'undefined') input.step = s.step;
-							input.value = self.settings[s.id] ?? s.value ?? '';
-							input.style.width = '100%';
-							input.style.padding = '6px';
-							input.style.borderRadius = '4px';
-							input.style.border = '1px solid #72767d';
-							input.style.backgroundColor = '#2c2f33';
-							input.style.color = '#fff';
-							input.style.boxSizing = 'border-box';
-							input.onchange = () => {
-								const val = Number(input.value);
-								if (!isNaN(val) && val >= (s.min || 1)) {
-									self.settings[s.id] = val;
-									if (s.id === 'checkForNewQuests') self.startInterval();
-								}
-							};
-							row.appendChild(input);
-						} else if (s.type === 'switch') {
-							const input = document.createElement('input');
-							input.type = 'checkbox';
-							input.checked = !!(self.settings[s.id] ?? s.value);
-							input.style.marginRight = '8px';
-							input.style.cursor = 'pointer';
-							input.onchange = () => {
-								const val = !!input.checked;
-								self.settings[s.id] = val;
-								if (s.id === 'autoStartVideoQuests') {
-									if (val) self.startAutoStart(); else self.stopAutoStart();
-								}
-								};
-							row.appendChild(input);
-						} else {
-							const input = document.createElement('input');
-							input.type = 'text';
-							input.value = self.settings[s.id] ?? s.value ?? '';
-							input.style.width = '100%';
-							input.style.padding = '6px';
-							input.style.borderRadius = '4px';
-							input.style.border = '1px solid #72767d';
-							input.style.backgroundColor = '#2c2f33';
-							input.style.color = '#fff';
-							input.style.boxSizing = 'border-box';
-							input.onchange = () => { self.settings[s.id] = input.value; };
-							row.appendChild(input);
-						}
-						
-						settingsContainer.appendChild(row);
-					}
-					
-					prevBtn.disabled = currentPage === 1;
-					nextBtn.disabled = currentPage === 2;
-					prevBtn.style.opacity = currentPage === 1 ? '0.5' : '1';
-					nextBtn.style.opacity = currentPage === 2 ? '0.5' : '1';
-					prevBtn.style.pointerEvents = currentPage === 1 ? 'none' : 'auto';
-					nextBtn.style.pointerEvents = currentPage === 2 ? 'none' : 'auto';
-				};
+				footer.appendChild(version);
+				footer.appendChild(debugBtn);
+				container.appendChild(footer);
 				
-				prevBtn.onclick = () => {
-					if (currentPage > 1) {
-						currentPage--;
-						updatePage();
-					}
-				};
-				
-				nextBtn.onclick = () => {
-					if (currentPage < 2) {
-						currentPage++;
-						updatePage();
-					}
-				};
-				
-				navContainer.appendChild(prevBtn);
-				navContainer.appendChild(nextBtn);
-				container.appendChild(navContainer);
-				
-				updatePage();
 				return container;
 			};
 			
@@ -1478,78 +1491,116 @@ module.exports = class BasePlugin {
 
             this.log('info', `Attempting to claim rewards for quest ${quest.id}`, retryCount > 0 ? `(retry ${retryCount}/${maxRetries})` : '');
 
-            // Method 1: Use store methods
+            // Check if already claimed before attempting
+            const initialCheck = await this.verifyQuestCompleted(quest.id);
+            if (initialCheck && initialCheck.claimed) {
+                this.log('info', `Quest ${quest.id} is already claimed`);
+                return true;
+            }
+
+            // Method 1: Use FluxDispatcher action (most reliable for modern Discord)
+            if (this.FluxDispatcher) {
+                try {
+                    this.log('debug', 'Attempting claim via FluxDispatcher QUEST_CLAIM_REWARD');
+                    this.FluxDispatcher.dispatch({
+                        type: 'QUEST_CLAIM_REWARD',
+                        questId: quest.id
+                    });
+                    
+                    // Wait for action to process
+                    await new Promise(resolve => setTimeout(resolve, 2000));
+                    
+                    const verification = await this.verifyQuestCompleted(quest.id);
+                    if (verification && verification.claimed) {
+                        this.log('info', `Quest ${quest.id} claimed successfully via Flux`);
+                        UI.showToast(`Quest rewards claimed: ${quest.config?.messages?.questName || quest.id}`, { type: 'success' });
+                        return true;
+                    }
+                } catch (e) {
+                    this.log('debug', 'FluxDispatcher claim failed', e.message);
+                }
+            }
+
+            // Method 2: Use store methods
             const store = this.QuestsStore ?? getQuestsStore();
             if (store && typeof store.claimReward === 'function') {
                 try {
+                    this.log('debug', 'Attempting claim via store.claimReward');
                     await store.claimReward(quest.id);
-                    this.log('info', 'Claimed reward via store.claimReward');
+                    
+                    await new Promise(resolve => setTimeout(resolve, 2000));
+                    const verification = await this.verifyQuestCompleted(quest.id);
+                    if (verification && verification.claimed) {
+                        this.log('info', `Quest ${quest.id} claimed successfully via store`);
+                        UI.showToast(`Quest rewards claimed: ${quest.config?.messages?.questName || quest.id}`, { type: 'success' });
+                        return true;
+                    }
                 } catch (e) {
                     this.log('debug', 'store.claimReward failed', e.message);
                 }
             }
 
-            // Method 2: Use API endpoints
+            // Method 3: Direct API call (fallback - may not work with new Discord API)
             if (this.api ?? api) {
                 const apiInstance = this.api ?? api;
-                const endpoints = [
-                    { url: `/quests/${quest.id}/claim-reward`, body: {} },
-                    { url: `/quests/${quest.id}/claim`, body: {} },
-                    { url: `/quests/${quest.id}/rewards/claim`, body: {} }
-                ];
-
-                for (const endpoint of endpoints) {
-                    try {
-                        this.log('debug', `Trying to claim via ${endpoint.url}`);
-                        const response = await apiInstance.post(endpoint);
-                        
-                        if (response) {
-                            this.log('info', `Claim response from ${endpoint.url}:`, response.status || 'success');
-                            
-                            // Verify claim after short delay
-                            await new Promise(resolve => setTimeout(resolve, 2000));
-                            const verification = await this.verifyQuestCompleted(quest.id);
-                            
-                            if (verification && verification.claimed) {
-                                this.log('info', `Quest ${quest.id} verified as claimed`);
-                                UI.showToast(`Quest rewards claimed successfully!`, { type: 'success' });
-                                return true;
-                            } else if (verification && !verification.claimed) {
-                                this.log('debug', `Quest completed but not yet claimed, trying next endpoint`);
-                                continue;
-                            }
+                try {
+                    this.log('debug', 'Attempting claim via direct API call');
+                    const response = await apiInstance.post({
+                        url: `/quests/${quest.id}/claim-reward`,
+                        body: {}
+                    });
+                    
+                    if (response && (response.ok || response.status === 200)) {
+                        await new Promise(resolve => setTimeout(resolve, 2000));
+                        const verification = await this.verifyQuestCompleted(quest.id);
+                        if (verification && verification.claimed) {
+                            this.log('info', `Quest ${quest.id} claimed successfully via API`);
+                            UI.showToast(`Quest rewards claimed: ${quest.config?.messages?.questName || quest.id}`, { type: 'success' });
+                            return true;
                         }
-                    } catch (e) {
-                        this.log('debug', `Claim attempt via ${endpoint.url} failed:`, e.message || e.toString());
-                        // Continue to next endpoint
+                    }
+                } catch (e) {
+                    // 404/400 errors are expected if Discord changed the API - log as debug not error
+                    if (e.status === 404 || e.status === 400) {
+                        this.log('debug', `API claim endpoint returned ${e.status} - Discord may have changed the claiming flow`);
+                    } else if (e.status === 429) {
+                        this.log('warn', 'Rate limited by Discord API, waiting before retry');
+                        await new Promise(resolve => setTimeout(resolve, 5000));
+                    } else {
+                        this.log('debug', 'API claim failed', e.message);
                     }
                 }
             }
 
-            // Verify completion even if claiming methods threw errors
-            await new Promise(resolve => setTimeout(resolve, 1500));
-            const verification = await this.verifyQuestCompleted(quest.id);
+            // Final verification
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            const finalCheck = await this.verifyQuestCompleted(quest.id);
             
-            if (verification && verification.claimed) {
-                this.log('info', `Quest ${quest.id} is already claimed`);
+            if (finalCheck && finalCheck.claimed) {
+                this.log('info', `Quest ${quest.id} is now claimed`);
                 return true;
             }
 
-            // Retry logic with exponential backoff
-            if (retryCount < maxRetries) {
-                const backoffDelay = Math.min(1000 * Math.pow(2, retryCount), 10000);
-                this.log('info', `Retrying claim in ${backoffDelay}ms...`);
-                await new Promise(resolve => setTimeout(resolve, backoffDelay));
-                return await this.claimQuestRewards(quest, retryCount + 1);
+            // If quest is completed but not claimed, it might auto-claim or need manual claim
+            if (finalCheck && finalCheck.completed && !finalCheck.claimed) {
+                this.log('info', `Quest ${quest.id} completed but not claimed - may require manual action`);
+                
+                // Retry logic with exponential backoff
+                if (retryCount < maxRetries) {
+                    const backoffDelay = Math.min(2000 * Math.pow(2, retryCount), 15000);
+                    this.log('info', `Retrying claim in ${backoffDelay}ms...`);
+                    await new Promise(resolve => setTimeout(resolve, backoffDelay));
+                    return await this.claimQuestRewards(quest, retryCount + 1);
+                }
             }
 
-            this.log('warn', `Failed to claim rewards for quest ${quest.id} after ${maxRetries} attempts`);
+            this.log('warn', `Could not claim rewards for quest ${quest.id} after ${maxRetries + 1} attempts`);
             return false;
         } catch (err) {
             this.log('error', 'claimQuestRewards error', err.message);
             
             if (retryCount < maxRetries) {
-                const backoffDelay = Math.min(1000 * Math.pow(2, retryCount), 10000);
+                const backoffDelay = Math.min(2000 * Math.pow(2, retryCount), 15000);
                 await new Promise(resolve => setTimeout(resolve, backoffDelay));
                 return await this.claimQuestRewards(quest, retryCount + 1);
             }

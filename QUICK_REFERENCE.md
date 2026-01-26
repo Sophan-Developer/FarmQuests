@@ -29,33 +29,47 @@
 
 ### For Stability (Default)
 ```
-checkForNewQuests: 5
-autoStartVideoQuests: OFF
-maxFallbackAttempts: 30
-concurrentFarms: 3
-delayBetweenFarms: 2
-enableVerboseLogging: OFF
-autoCompleteAllQuests: OFF
-retryFailedQuests: ON
+Page 1 - Automation:
+  ✓ Auto Accept Quests
+  ✓ Auto Complete Quests
+  ✓ Auto Claim Rewards
+  ✓ Auto Start Video Quests
+  ✓ Retry Failed Quests
+  ✓ Verify Quest Completion
+  Claim Retry Attempts: 3
+  ✓ Quest Notifications
+  ✗ Hide Progress Pill
+
+Page 2 - Advanced:
+  Max Concurrent Farms: 3
+  Delay Between Farms: 2
+  Quest Check Interval: 5
+  Max Heartbeat Attempts: 30
+  ✗ Verbose Logging
 ```
 
 ### For Fast Farming
 ```
-checkForNewQuests: 2 (check every 2 min)
-concurrentFarms: 5 (farm 5 quests at once)
-maxFallbackAttempts: 20 (fail fast)
+Page 2 - Performance:
+  Quest Check Interval: 2 (check every 2 min)
+  Max Concurrent Farms: 5 (farm 5 at once)
+  Max Heartbeat Attempts: 20 (fail fast)
+  Delay Between Farms: 1 (minimal delay)
 ```
 
 ### For Debugging
+
 ```
-enableVerboseLogging: ON (see all operations)
-checkForNewQuests: 5
-concurrentFarms: 1 (easier to follow)
+Page 2 - Advanced:
+  ✓ Verbose Logging (ON for debugging)
+  Quest Check Interval: 1 (check every minute)
+  Max Concurrent Farms: 1 (easier to follow)
 ```
 
 ## 🖥️ Console Commands
 
 ### Check Plugin Status
+
 ```javascript
 // View current settings
 console.log(BdApi.Plugins.get('FarmQuests'))

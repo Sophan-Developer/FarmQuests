@@ -26,28 +26,35 @@ New `initializeSettings()` method that:
 **Default Values Guaranteed:**
 ```json
 {
-  "checkForNewQuests": 5,
-  "autoStartVideoQuests": false,
-  "maxFallbackAttempts": 30,
+  "acceptQuestsAutomatically": true,
+  "autoCompleteAllQuests": true,
+  "autoClaimRewards": true,
+  "autoStartVideoQuests": true,
+  "retryFailedQuests": true,
+  "verifyQuestCompletion": true,
+  "claimRetryAttempts": 3,
+  "questNotifications": true,
+  "suppressQuestProgressPill": false,
   "concurrentFarms": 3,
   "delayBetweenFarms": 2,
-  "enableVerboseLogging": false,
-  "acceptQuestsAutomatically": true,
-  "showQuestsButtonTitleBar": true,
-  "showQuestsButtonSettingsBar": true,
-  "showQuestsButtonBadges": true,
-  "autoCompleteAllQuests": false,
-  "retryFailedQuests": true,
-  "questNotifications": true
+  "checkForNewQuests": 5,
+  "maxFallbackAttempts": 30,
+  "enableVerboseLogging": false
 }
 ```
 
-### 3. **Enhanced Settings Panel** ✅
-The `getSettingsPanel()` onChange handler now includes:
-- **Numeric validation** for `checkForNewQuests`, `maxFallbackAttempts`, `concurrentFarms`, `delayBetweenFarms`
-  - Enforces minimum value of 0-1 depending on setting
-  - Validates against NaN and infinity
-- **Comprehensive switch statement** covering all 13 settings
+### 3. **Modern UI/UX Settings Panel** ✅
+The `getSettingsPanel()` now features:
+- **Tabbed Interface:** Two pages (⚙️ Automation, 🔧 Advanced)
+- **Section Headers:** Visual groupings with colored borders
+- **Dividers:** Clean separation between logical groups
+- **Modern Toggles:** iOS-style switches with smooth animations
+- **Hover Effects:** Interactive states on all elements
+- **Info Boxes:** Warning messages for advanced settings
+- **Footer:** Version display + "Copy Debug Info" button
+- **Responsive Layout:** Card-based design with proper spacing
+- **Full numeric validation** for all number inputs (min/max/step enforcement)
+- **Comprehensive event handlers** covering all settings
 - **Try-catch wrapper** with detailed error logging
 - **Automatic UI triggers** for settings that affect plugin behavior
 

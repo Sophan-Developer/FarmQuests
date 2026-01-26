@@ -35,32 +35,47 @@ A BetterDiscord plugin that automatically farms multiple Discord quests in the b
 
 ## Settings
 
-### Core Settings
+The plugin features a modern tabbed settings interface with two pages:
 
+### ⚙️ Page 1: Automation Settings
+
+#### Quest Automation
 | Setting | Type | Default | Description |
 |---------|------|---------|-------------|
-| **Interval to check for new quests (min)** | Number | 5 | How often (in minutes) the plugin checks for new quests |
-| **Auto-start video quests** | Toggle | ON | Automatically click "Start Video Quest" when available |
-| **Max fallback attempts** | Number | 30 | Maximum number of retry attempts before forcing quest completion |
-| **Concurrent farms** | Number | 3 | Maximum number of quests to farm simultaneously |
+| **Auto Accept Quests** | Toggle | ON | Automatically accept new available quests when they appear |
+| **Auto Complete Quests** | Toggle | ON | Automatically complete all quest types (video, play, stream) |
+| **Auto Claim Rewards** | Toggle | ON | Claim quest rewards automatically after completion |
+| **Auto Start Video Quests** | Toggle | ON | Click 'Start Video Quest' button automatically |
 
-### Advanced Settings
-
+#### Retry & Recovery
 | Setting | Type | Default | Description |
 |---------|------|---------|-------------|
-| **Delay between farms (sec)** | Number | 2 | Delay in seconds between completing quests |
-| **Verbose logging** | Toggle | OFF | Enable detailed debug logs in the console |
-| **Auto-complete all quests** | Toggle | OFF | Automatically complete all quests without watching videos |
-| **Retry failed quests** | Toggle | ON | Automatically retry quests that fail to complete |
+| **Retry Failed Quests** | Toggle | ON | Automatically retry quests that fail to complete |
+| **Verify Quest Completion** | Toggle | ON | Double-check that quests are properly completed and claimed |
+| **Claim Retry Attempts** | Number | 3 | Number of times to retry claiming rewards if it fails (1-10) |
 
-### UI Settings
-
+#### Notifications & UI
 | Setting | Type | Default | Description |
 |---------|------|---------|-------------|
-| **Accept Quests Automatically** | Toggle | ON | Auto-accept available quests (when implemented) |
-| **Show Quests Title Bar** | Toggle | ON | Display quests button in the title bar |
-| **Show Quests Settings Bar** | Toggle | ON | Display quests button in settings bar |
-| **Show Quests Badges** | Toggle | ON | Show badges on quest buttons || **Quest Notifications** | Toggle | ON | Show notifications when quests are completed |
+| **Quest Notifications** | Toggle | ON | Show desktop notifications for quest progress and completion |
+| **Hide Progress Pill** | Toggle | OFF | Hide the quest progress notification pill in Discord UI |
+
+### 🔧 Page 2: Advanced Settings
+
+#### Performance Settings
+| Setting | Type | Default | Description |
+|---------|------|---------|-------------|
+| **Max Concurrent Farms** | Number | 3 | Maximum number of quests to farm simultaneously (1-10, higher = faster but more resource usage) |
+| **Delay Between Farms** | Number | 2 | Delay in seconds between starting each quest (0-30, prevents rate limiting) |
+| **Quest Check Interval** | Number | 5 | How often to check for new quests in minutes (1-60) |
+
+#### Advanced Technical Settings
+| Setting | Type | Default | Description |
+|---------|------|---------|-------------|
+| **Max Heartbeat Attempts** | Number | 30 | Maximum heartbeat attempts before forcing completion (5-100, technical) |
+| **Verbose Logging** | Toggle | OFF | Enable detailed debug logs in console (for troubleshooting issues) |
+
+> ⚠️ **Note:** Changing advanced settings may affect plugin stability. Default values are recommended for most users.
 ## How It Works
 
 ### Quest Detection
