@@ -21,6 +21,7 @@ A BetterDiscord plugin that automatically farms multiple Discord quests in the b
 - 🔇 **Verbose logging** – Optional debug output for troubleshooting
 - 📋 **Copy Debug Info** – One-click copy of debug info for troubleshooting
 - 🧹 **Memory safe** – Proper cleanup of intervals/subscriptions on stop
+- 🌐 **Multi-language support** – Settings UI available in English, Khmer (ខ្មែរ), and Chinese (中文)
 
 ## Prerequisites
 
@@ -78,7 +79,14 @@ Once BetterDiscord is installed:
 
 ## Settings
 
-The plugin features a modern tabbed settings interface with two pages:
+The plugin features a modern tabbed settings interface with two pages.
+
+A **language selector** is shown at the top of the settings panel. Choose between:
+- 🇺🇸 **English** (default)
+- 🇰🇭 **ខ្មែរ (Khmer)**
+- 🇨🇳 **中文 (Chinese)**
+
+All setting labels, descriptions, tab names, headers, notifications, and toast messages will update to your selected language.
 
 ### ⚙️ Page 1: Automation Settings
 
@@ -216,6 +224,12 @@ A: Yes! Adjust the **Concurrent farms** setting. Default is 3, meaning up to 3 q
 - 🔧 **Source:** [BetterDiscord-Stuff Repository](https://github.com/Sophan-Developer/FarmQuests)
 
 ## Changelog
+
+**v1.6.2** (Feb 2026)
+- Added multi-language support: English, Khmer (ខ្មែរ), and Chinese (中文)
+- Language dropdown selector at the top of the settings panel
+- All settings labels, notes, headers, tab names, notifications, and toasts are fully translated
+- Language preference persists across reloads via config.json
 
 **v1.6.1** (Jan 2026)
 - Fixed syntax error in API module resolution

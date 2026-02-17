@@ -15,13 +15,12 @@
     "questNotifications": false,
     "version": "1.1.0",
     "currentVersionInfo": {
-        "version": "1.6.1",
+        "version": "1.6.2",
         "hasShownChangelog": true
     },
     "autoClaimRewards": true,
     "verifyQuestCompletion": true,
     "claimRetryAttempts": 5,
-    "failedClaimQuests": [
-        "1461152783888810047"
-    ]
+    "failedClaimQuests": [],
+    "language": "en"
 }

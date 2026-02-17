@@ -3,15 +3,15 @@
 ## ⚡ Quick Start
 1. **Reload Discord:** `Ctrl+R`
 2. **Open Settings:** BetterDiscord → FarmQuests plugin
-3. **Verify:** All 10 settings should display
-4. **Enroll:** Manually start at least one quest
-5. **Wait:** Plugin automatically detects and farms
+3. **Choose Language:** Select English, Khmer, or Chinese at the top
+4. **Verify:** All settings should display in your chosen language
+5. **Enroll:** Manually start at least one quest
+6. **Wait:** Plugin automatically detects and farms
 
 ## ⚙️ 10 Settings at a Glance
 
 | # | Setting | Type | Default | Purpose |
-|---|---------|------|---------|---------|
-| 1 | Interval to check for new quests (min) | Number | 5 | How often to look for new quests |
+|---|---------|------|---------|---------|| 0 | Language | Dropdown | English | UI language (English / ខ្មែរ / 中文) || 1 | Interval to check for new quests (min) | Number | 5 | How often to look for new quests |
 | 2 | Auto-start video quests | Toggle | OFF | Automatically click "Start Video Quest" |
 | 3 | Max fallback attempts | Number | 30 | Retry attempts before forced completion |
 | 4 | Concurrent farms | Number | 3 | Max quests farming at once |
@@ -29,6 +29,8 @@
 
 ### For Stability (Default)
 ```
+Language: English (or Khmer / Chinese)
+
 Page 1 - Automation:
   ✓ Auto Accept Quests
   ✓ Auto Complete Quests
@@ -190,4 +192,4 @@ localStorage.setItem('BetterDiscord_Plugins_FarmQuests_enableVerboseLogging', tr
 
 ---
 
-**Version:** 1.0.5 | **Last Updated:** 2024 | **Status:** Production Ready ✅
+**Version:** 1.6.2 | **Last Updated:** February 2026 | **Status:** Production Ready ✅

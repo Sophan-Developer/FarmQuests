@@ -1,12 +1,20 @@
 # FarmQuests Plugin - Robustness Update Complete ✅
 
-## What Was Updated (v1.6.1 - January 2026)
+## What Was Updated (v1.6.2 - February 2026)
 
-Your FarmQuests plugin has been comprehensively enhanced with **13 configurable settings**, **robust error handling, unified logging, memory leak fixes, and automatic settings initialization** to prevent future errors.
+Your FarmQuests plugin has been comprehensively enhanced with **multi-language support (English, Khmer, Chinese)**, **13 configurable settings**, **robust error handling, unified logging, memory leak fixes, and automatic settings initialization** to prevent future errors.
 
 ### Major Improvements Summary
 
-#### 1. **Critical Bug Fixes (v1.6.1)**
+#### 1. **Multi-Language Support (v1.6.2)** 🌐
+- Added full localization for **English** 🇺🇸, **Khmer (ខ្មែរ)** 🇰🇭, and **Chinese (中文)** 🇨🇳
+- Language dropdown selector at the top of the settings panel
+- All settings labels, notes, headers, tab names are translated
+- All notifications and toast messages are translated
+- Language preference saved to `FarmQuests.config.json` and persists across reloads
+- Translation helper function `t()` with placeholder interpolation (e.g. `{name}`, `{version}`)
+
+#### 2. **Critical Bug Fixes (v1.6.1)**
 - Fixed syntax error in API module resolution (incomplete else statement)
 - Fixed version comparison logic in update checker (was inverted)
 - Fixed memory leaks - intervals and Flux subscriptions now properly cleaned up
@@ -161,7 +169,8 @@ If any setting gets corrupted, these defaults will be restored:
   "showQuestsButtonBadges": true,
   "autoCompleteAllQuests": false,
   "retryFailedQuests": true,
-  "questNotifications": true
+  "questNotifications": true,
+  "language": "en"
 }
 ```
 
@@ -191,9 +200,10 @@ If any setting gets corrupted, these defaults will be restored:
 
 ## 📝 Version Info
 
-- **Plugin Version:** 1.6.1
-- **Last Updated:** January 2026
+- **Plugin Version:** 1.6.2
+- **Last Updated:** February 2026
 - **Robustness Update:** Complete
+- **Multi-Language:** ✅ English, Khmer, Chinese
 - **Memory Leak Fixes:** ✅ Yes
 - **Backward Compatible:** ✅ Yes
 

@@ -1,7 +1,7 @@
 /**
  * @name FarmQuests
  * @description A plugin that farms you multiple discord quests in background simultaneously.
- * @version 1.6.1
+ * @version 1.6.2
  * @author Sophan-Developer
  * @authorLink https://github.com/Sophan-Developer
  * @website https://github.com/Sophan-Developer/FarmQuests
@@ -11,28 +11,260 @@
 
 // Porting of https://gist.github.com/aamiaa/204cd9d42013ded9faf646fae7f89fbb for betterdiscord
 
+// ═══════════════════════════════════════════════════════════════
+// TRANSLATIONS / LOCALIZATION
+// ═══════════════════════════════════════════════════════════════
+const translations = {
+    en: {
+        // Tabs
+        tabAutomation: "⚙️ Automation",
+        tabAdvanced: "🔧 Advanced",
+        // Page 1 Headers
+        headerQuestAutomation: "⚙️ Quest Automation",
+        headerRetryRecovery: "🔄 Retry & Recovery",
+        headerNotificationsUI: "🔔 Notifications & UI",
+        // Page 2 Headers
+        headerPerformance: "⚡ Performance Settings",
+        headerAdvancedTech: "🔧 Advanced Technical Settings",
+        headerInfo: "ℹ️ Information",
+        // Settings Names
+        acceptQuestsAutomatically: "Auto Accept Quests",
+        autoCompleteAllQuests: "Auto Complete Quests",
+        autoClaimRewards: "Auto Claim Rewards",
+        autoStartVideoQuests: "Auto Start Video Quests",
+        retryFailedQuests: "Retry Failed Quests",
+        verifyQuestCompletion: "Verify Quest Completion",
+        claimRetryAttempts: "Claim Retry Attempts",
+        questNotifications: "Quest Notifications",
+        suppressQuestProgressPill: "Hide Progress Pill",
+        concurrentFarms: "Max Concurrent Farms",
+        delayBetweenFarms: "Delay Between Farms",
+        checkForNewQuests: "Quest Check Interval",
+        maxFallbackAttempts: "Max Heartbeat Attempts",
+        enableVerboseLogging: "Verbose Logging",
+        // Settings Notes
+        acceptQuestsAutomaticallyNote: "Automatically accept new available quests when they appear",
+        autoCompleteAllQuestsNote: "Automatically complete all quest types (video, play, stream)",
+        autoClaimRewardsNote: "Claim quest rewards automatically after completion",
+        autoStartVideoQuestsNote: "Click 'Start Video Quest' button automatically",
+        retryFailedQuestsNote: "Automatically retry quests that fail to complete",
+        verifyQuestCompletionNote: "Double-check that quests are properly completed and claimed",
+        claimRetryAttemptsNote: "Number of times to retry claiming rewards if it fails",
+        questNotificationsNote: "Show desktop notifications for quest progress and completion",
+        suppressQuestProgressPillNote: "Hide the quest progress notification pill in Discord UI",
+        concurrentFarmsNote: "Maximum number of quests to farm simultaneously (higher = faster but more resource usage)",
+        delayBetweenFarmsNote: "Delay in seconds between starting each quest (prevents rate limiting)",
+        checkForNewQuestsNote: "How often to check for new quests (in minutes)",
+        maxFallbackAttemptsNote: "Maximum heartbeat attempts before forcing completion (technical)",
+        enableVerboseLoggingNote: "Enable detailed debug logs in console (for troubleshooting issues)",
+        infoWarning: "⚠️ Changing advanced settings may affect plugin stability. Default values are recommended for most users.",
+        // Footer
+        copyDebugInfo: "📋 Copy Debug Info",
+        // Language setting
+        language: "Language",
+        languageNote: "Select the display language for the plugin settings",
+        // Notifications
+        updateAvailableTitle: "Update Available!",
+        updateAvailableContent: "Version {version} is now available!",
+        updateNow: "Update Now",
+        updateLater: "Update Later",
+        updateDownloaded: "Update downloaded! Please reload Discord.",
+        updateFailed: "Failed to download update",
+        questCompletedTitle: "Quest Completed!",
+        questStartedTitle: "Quest Started",
+        questCompletedContent: "Successfully completed {name}!",
+        questStartedContent: "Farming {name}...",
+        questCompletedToast: "Quest completed: {name}",
+        questStartedToast: "Farming: {name}",
+        newQuestTitle: "New Quest Available!",
+        newQuestContent: 'Please accept the quest "{name}" to start auto farming.',
+        newQuestToast: "New quest available: {name}",
+        goToQuests: "Go to Quests",
+        remindMeLater: "Remind Me Later",
+        errorCopyDebug: "📋 Copy Debug Info",
+        errorDismiss: "Dismiss",
+        debugCopied: "Debug info copied to clipboard!",
+        debugCopyFailed: "Failed to copy debug info",
+    },
+    km: {
+        // Tabs
+        tabAutomation: "⚙️ ស្វ័យប្រវត្តិកម្ម",
+        tabAdvanced: "🔧 កម្រិតខ្ពស់",
+        // Page 1 Headers
+        headerQuestAutomation: "⚙️ ស្វ័យប្រវត្តិកម្មបេសកកម្ម",
+        headerRetryRecovery: "🔄 ព្យាយាមឡើងវិញ និងស្ដារ",
+        headerNotificationsUI: "🔔 ការជូនដំណឹង និង UI",
+        // Page 2 Headers
+        headerPerformance: "⚡ ការកំណត់ប្រតិបត្តិការ",
+        headerAdvancedTech: "🔧 ការកំណត់បច្ចេកទេសកម្រិតខ្ពស់",
+        headerInfo: "ℹ️ ព័ត៌មាន",
+        // Settings Names
+        acceptQuestsAutomatically: "ទទួលបេសកកម្មដោយស្វ័យប្រវត្តិ",
+        autoCompleteAllQuests: "បំពេញបេសកកម្មដោយស្វ័យប្រវត្តិ",
+        autoClaimRewards: "ទាមទារรង្វាន់ដោយស្វ័យប្រវត្តិ",
+        autoStartVideoQuests: "ចាប់ផ្ដើមបេសកកម្មវីដេអូស្វ័យប្រវត្តិ",
+        retryFailedQuests: "ព្យាយាមបេសកកម្មដែលបរាជ័យឡើងវិញ",
+        verifyQuestCompletion: "ផ្ទៀងផ្ទាត់ការបំពេញបេសកកម្ម",
+        claimRetryAttempts: "ចំនួនដងព្យាយាមទាមទារ",
+        questNotifications: "ការជូនដំណឹងបេសកកម្ម",
+        suppressQuestProgressPill: "លាក់គ្រាប់វឌ្ឍនភាព",
+        concurrentFarms: "ចំនួនបេសកកម្មព្រមគ្នា",
+        delayBetweenFarms: "ពេលវេលារវាងបេសកកម្ម",
+        checkForNewQuests: "ចន្លោះពេលត្រួតពិនិត្យ",
+        maxFallbackAttempts: "ចំនួន Heartbeat អតិបរមា",
+        enableVerboseLogging: "កំណត់ត្រាលម្អិត",
+        // Settings Notes
+        acceptQuestsAutomaticallyNote: "ទទួលយកបេសកកម្មថ្មីដែលមានដោយស្វ័យប្រវត្តិនៅពេលវាលេចឡើង",
+        autoCompleteAllQuestsNote: "បំពេញប្រភេទបេសកកម្មទាំងអស់ដោយស្វ័យប្រវត្តិ (វីដេអូ ការលេង ការផ្សាយ)",
+        autoClaimRewardsNote: "ទាមទាររង្វាន់បេសកកម្មដោយស្វ័យប្រវត្តិបន្ទាប់ពីបំពេញ",
+        autoStartVideoQuestsNote: "ចុចប៊ូតុង 'ចាប់ផ្ដើមបេសកកម្មវីដេអូ' ដោយស្វ័យប្រវត្តិ",
+        retryFailedQuestsNote: "ព្យាយាមបេសកកម្មដែលបរាជ័យម្ដងទៀតដោយស្វ័យប្រវត្តិ",
+        verifyQuestCompletionNote: "ពិនិត្យឡើងវិញថាបេសកកម្មត្រូវបានបំពេញ និងទាមទារត្រឹមត្រូវ",
+        claimRetryAttemptsNote: "ចំនួនដងដែលត្រូវព្យាយាមទាមទាររង្វាន់ឡើងវិញប្រសិនបើវាបរាជ័យ",
+        questNotificationsNote: "បង្ហាញការជូនដំណឹងលើផ្ទៃតុសម្រាប់វឌ្ឍនភាព និងការបញ្ចប់បេសកកម្ម",
+        suppressQuestProgressPillNote: "លាក់គ្រាប់ការជូនដំណឹងវឌ្ឍនភាពបេសកកម្មនៅក្នុង Discord UI",
+        concurrentFarmsNote: "ចំនួនអតិបរមានៃបេសកកម្មដែលត្រូវដាំព្រមគ្នា (ខ្ពស់ = លឿនជាង ប៉ុន្តែប្រើធនធានច្រើន)",
+        delayBetweenFarmsNote: "ពេលវេលា​ពន្យឺត​ជា​វិនាទី​រវាង​ការ​ចាប់ផ្ដើម​បេសកកម្ម​នីមួយៗ (ការពារ rate limiting)",
+        checkForNewQuestsNote: "រាល់​ពេល​ណា​ត្រូវ​ពិនិត្យ​រក​បេសកកម្ម​ថ្មី (គិតជានាទី)",
+        maxFallbackAttemptsNote: "ចំនួន heartbeat អតិបរមាមុនពេលបង្ខំឱ្យបញ្ចប់ (បច្ចេកទេស)",
+        enableVerboseLoggingNote: "បើកកំណត់ត្រាបំបាត់កំហុសលម្អិតនៅក្នុង console (សម្រាប់ដោះស្រាយបញ្ហា)",
+        infoWarning: "⚠️ ការផ្លាស់ប្ដូរការកំណត់កម្រិតខ្ពស់អាចប៉ះពាល់ដល់ស្ថេរភាពកម្មវិធី។ តម្លៃលំនាំដើមត្រូវបានណែនាំសម្រាប់អ្នកប្រើប្រាស់ភាគច្រើន។",
+        // Footer
+        copyDebugInfo: "📋 ចម្លងព័ត៌មានបំបាត់កំហុស",
+        // Language setting
+        language: "ភាសា",
+        languageNote: "ជ្រើសរើសភាសាបង្ហាញសម្រាប់ការកំណត់កម្មវិធី",
+        // Notifications
+        updateAvailableTitle: "មានកំណែថ្មី!",
+        updateAvailableContent: "កំណែ {version} ឥឡូវមានហើយ!",
+        updateNow: "ធ្វើបច្ចុប្បន្នភាពឥឡូវ",
+        updateLater: "ពេលក្រោយ",
+        updateDownloaded: "បានទាញយកបច្ចុប្បន្នភាព! សូមផ្ទុក Discord ឡើងវិញ។",
+        updateFailed: "បរាជ័យក្នុងការទាញយកបច្ចុប្បន្នភាព",
+        questCompletedTitle: "បេសកកម្មបានបញ្ចប់!",
+        questStartedTitle: "បេសកកម្មបានចាប់ផ្ដើម",
+        questCompletedContent: "បានបញ្ចប់ {name} ដោយជោគជ័យ!",
+        questStartedContent: "កំពុងដាំ {name}...",
+        questCompletedToast: "បេសកកម្មបានបញ្ចប់: {name}",
+        questStartedToast: "កំពុងដាំ: {name}",
+        newQuestTitle: "មានបេសកកម្មថ្មី!",
+        newQuestContent: 'សូមទទួលយកបេសកកម្ម "{name}" ដើម្បីចាប់ផ្ដើមដាំស្វ័យប្រវត្តិ។',
+        newQuestToast: "មានបេសកកម្មថ្មី: {name}",
+        goToQuests: "ទៅកាន់បេសកកម្ម",
+        remindMeLater: "រំលឹកខ្ញុំពេលក្រោយ",
+        errorCopyDebug: "📋 ចម្លងព័ត៌មានបំបាត់កំហុស",
+        errorDismiss: "បដិសេធ",
+        debugCopied: "បានចម្លងព័ត៌មានបំបាត់កំហុសទៅ clipboard!",
+        debugCopyFailed: "បរាជ័យក្នុងការចម្លងព័ត៌មានបំបាត់កំហុស",
+    },
+    zh: {
+        // Tabs
+        tabAutomation: "⚙️ 自动化",
+        tabAdvanced: "🔧 高级",
+        // Page 1 Headers
+        headerQuestAutomation: "⚙️ 任务自动化",
+        headerRetryRecovery: "🔄 重试与恢复",
+        headerNotificationsUI: "🔔 通知与界面",
+        // Page 2 Headers
+        headerPerformance: "⚡ 性能设置",
+        headerAdvancedTech: "🔧 高级技术设置",
+        headerInfo: "ℹ️ 信息",
+        // Settings Names
+        acceptQuestsAutomatically: "自动接受任务",
+        autoCompleteAllQuests: "自动完成任务",
+        autoClaimRewards: "自动领取奖励",
+        autoStartVideoQuests: "自动开始视频任务",
+        retryFailedQuests: "重试失败的任务",
+        verifyQuestCompletion: "验证任务完成",
+        claimRetryAttempts: "领取重试次数",
+        questNotifications: "任务通知",
+        suppressQuestProgressPill: "隐藏进度标签",
+        concurrentFarms: "最大并发任务数",
+        delayBetweenFarms: "任务间延迟",
+        checkForNewQuests: "任务检查间隔",
+        maxFallbackAttempts: "最大心跳尝试次数",
+        enableVerboseLogging: "详细日志",
+        // Settings Notes
+        acceptQuestsAutomaticallyNote: "当新任务出现时自动接受",
+        autoCompleteAllQuestsNote: "自动完成所有类型的任务（视频、游玩、直播）",
+        autoClaimRewardsNote: "完成后自动领取任务奖励",
+        autoStartVideoQuestsNote: "自动点击'开始视频任务'按钮",
+        retryFailedQuestsNote: "自动重试未能完成的任务",
+        verifyQuestCompletionNote: "双重检查任务是否已正确完成和领取",
+        claimRetryAttemptsNote: "领取奖励失败时的重试次数",
+        questNotificationsNote: "显示任务进度和完成的桌面通知",
+        suppressQuestProgressPillNote: "隐藏Discord界面中的任务进度通知标签",
+        concurrentFarmsNote: "同时执行的最大任务数（越高越快，但资源消耗越多）",
+        delayBetweenFarmsNote: "开始每个任务之间的延迟秒数（防止速率限制）",
+        checkForNewQuestsNote: "检查新任务的频率（分钟）",
+        maxFallbackAttemptsNote: "强制完成前的最大心跳尝试次数（技术参数）",
+        enableVerboseLoggingNote: "在控制台中启用详细调试日志（用于故障排除）",
+        infoWarning: "⚠️ 更改高级设置可能会影响插件稳定性。建议大多数用户使用默认值。",
+        // Footer
+        copyDebugInfo: "📋 复制调试信息",
+        // Language setting
+        language: "语言",
+        languageNote: "选择插件设置的显示语言",
+        // Notifications
+        updateAvailableTitle: "有新版本可用！",
+        updateAvailableContent: "版本 {version} 现已可用！",
+        updateNow: "立即更新",
+        updateLater: "稍后更新",
+        updateDownloaded: "更新已下载！请重新加载Discord。",
+        updateFailed: "下载更新失败",
+        questCompletedTitle: "任务已完成！",
+        questStartedTitle: "任务已开始",
+        questCompletedContent: "成功完成 {name}！",
+        questStartedContent: "正在执行 {name}...",
+        questCompletedToast: "任务已完成：{name}",
+        questStartedToast: "正在执行：{name}",
+        newQuestTitle: "新任务可用！",
+        newQuestContent: '请接受任务 "{name}" 以开始自动执行。',
+        newQuestToast: "新任务可用：{name}",
+        goToQuests: "前往任务",
+        remindMeLater: "稍后提醒我",
+        errorCopyDebug: "📋 复制调试信息",
+        errorDismiss: "关闭",
+        debugCopied: "调试信息已复制到剪贴板！",
+        debugCopyFailed: "复制调试信息失败",
+    }
+};
+
+/** Get translated string. Usage: t('key') or t('key', { name: 'value' }) */
+function t(key, params = {}) {
+    const langSetting = BdApi.Data.load('FarmQuests', 'language') || 'en';
+    const lang = translations[langSetting] || translations.en;
+    let str = lang[key] ?? translations.en[key] ?? key;
+    for (const [k, v] of Object.entries(params)) {
+        str = str.replace(`{${k}}`, v);
+    }
+    return str;
+}
+
 const config = {
     info: {
         name: 'FarmQuests',
-        version: '1.6.1',
+        version: '1.6.2',
         github_raw: 'https://raw.githubusercontent.com/Sophan-Developer/FarmQuests/main/FarmQuests.plugin.js'
     },
     changelog: [
+        { title: "Multi-Language Support (Feb 2026)", type: "added", items: [
+            "Added full localization: English, Khmer, and Chinese",
+            "Language dropdown selector at the top of the settings panel",
+            "All settings labels, notes, headers, tabs, notifications and toasts are translated",
+            "Language preference persists across reloads"
+        ]},
         { title: "Bug Fixes (Jan 2026)", type: "fixed", items: [
             "Fixed syntax error in API module resolution (line 87)",
             "Fixed version comparison logic in update checker",
             "Fixed memory leaks - intervals and Flux subscriptions now properly cleaned up",
             "Added null-safety guards in webpack module finder"
         ]},
-        { title: "New Features", type: "added", items: [
-            "Added 'Copy Debug Info' feature for easier troubleshooting",
-            "Added user-friendly error notices with debug option",
-            "Added cleanup registry to track all intervals/timeouts/subscriptions"
-        ]},
-        { title: "Improvements", type: "improved", items: [
+        { title: "Previous Improvements", type: "improved", items: [
             "Better error handling when Discord modules are missing",
             "Improved stop() cleanup to prevent resource leaks",
-            "More robust store resolution with better fallback patterns"
+            "More robust store resolution with better fallback patterns",
+            "Copy Debug Info feature for easier troubleshooting"
         ]}
     ],
     settings: [
@@ -376,7 +608,9 @@ module.exports = class BasePlugin {
 				claimRetryAttempts: 3,
 				verifyQuestCompletion: true,
 				suppressQuestProgressPill: false,
-				enableVerboseLogging: false
+				enableVerboseLogging: false,
+				// Language
+				language: 'en'
 			};
 			
 			for (const [key, defaultValue] of Object.entries(defaultSettings)) {
@@ -464,9 +698,9 @@ module.exports = class BasePlugin {
 			} else {
 				navigator.clipboard.writeText(debugInfo);
 			}
-			UI.showToast('Debug info copied to clipboard!', { type: 'success' });
+			UI.showToast(t('debugCopied'), { type: 'success' });
 		} catch (e) {
-			UI.showToast('Failed to copy debug info', { type: 'error' });
+			UI.showToast(t('debugCopyFailed'), { type: 'error' });
 			console.error('[FarmQuests] copyDebugInfo failed:', e);
 		}
 	}
@@ -489,11 +723,11 @@ module.exports = class BasePlugin {
 					duration: 10000,
 					actions: [
 						{
-							label: '📋 Copy Debug Info',
+							label: t('errorCopyDebug'),
 							onClick: () => this.copyDebugInfo()
 						},
 						{
-							label: 'Dismiss',
+							label: t('errorDismiss'),
 							onClick: () => {}
 						}
 					]
@@ -610,9 +844,57 @@ module.exports = class BasePlugin {
 			const self = this;
 			let currentPage = 1;
 			
+			// Map setting header text to translation keys
+			const headerTranslationMap = {
+				"⚙️ Quest Automation": "headerQuestAutomation",
+				"🔄 Retry & Recovery": "headerRetryRecovery",
+				"🔔 Notifications & UI": "headerNotificationsUI",
+				"⚡ Performance Settings": "headerPerformance",
+				"🔧 Advanced Technical Settings": "headerAdvancedTech",
+				"ℹ️ Information": "headerInfo"
+			};
+			
 			const createPagedPanel = () => {
 				const container = document.createElement('div');
 				container.style.cssText = 'padding: 16px; background: var(--background-secondary); border-radius: 8px; max-width: 800px;';
+				
+				// ── Language selector at the very top ──
+				const langRow = document.createElement('div');
+				langRow.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: var(--background-primary); border-radius: 6px; margin-bottom: 16px;';
+				
+				const langLabelDiv = document.createElement('div');
+				langLabelDiv.style.cssText = 'flex: 1;';
+				const langLabel = document.createElement('div');
+				langLabel.textContent = t('language');
+				langLabel.style.cssText = 'font-weight: 500; color: var(--header-primary); font-size: 15px; margin-bottom: 4px;';
+				const langNote = document.createElement('div');
+				langNote.textContent = t('languageNote');
+				langNote.style.cssText = 'font-size: 13px; color: var(--text-muted); line-height: 1.4;';
+				langLabelDiv.appendChild(langLabel);
+				langLabelDiv.appendChild(langNote);
+				langRow.appendChild(langLabelDiv);
+				
+				const langSelect = document.createElement('select');
+				langSelect.style.cssText = 'padding: 8px 12px; background: var(--input-background); border: 1px solid var(--background-tertiary); border-radius: 4px; color: var(--text-normal); font-size: 14px; cursor: pointer; min-width: 140px;';
+				const languages = [
+					{ value: 'en', label: '🇺🇸 English' },
+					{ value: 'km', label: '🇰🇭 ខ្មែរ (Khmer)' },
+					{ value: 'zh', label: '🇨🇳 中文 (Chinese)' }
+				];
+				const currentLang = self.settings['language'] || 'en';
+				languages.forEach(lang => {
+					const option = document.createElement('option');
+					option.value = lang.value;
+					option.textContent = lang.label;
+					if (lang.value === currentLang) option.selected = true;
+					langSelect.appendChild(option);
+				});
+				langSelect.onchange = () => {
+					self.settings['language'] = langSelect.value;
+					container.replaceWith(createPagedPanel());
+				};
+				langRow.appendChild(langSelect);
+				container.appendChild(langRow);
 				
 				// Page tabs
 				const tabsContainer = document.createElement('div');
@@ -629,8 +911,8 @@ module.exports = class BasePlugin {
 					return tab;
 				};
 				
-				tabsContainer.appendChild(createTab('⚙️ Automation', 1));
-				tabsContainer.appendChild(createTab('🔧 Advanced', 2));
+				tabsContainer.appendChild(createTab(t('tabAutomation'), 1));
+				tabsContainer.appendChild(createTab(t('tabAdvanced'), 2));
 				container.appendChild(tabsContainer);
 				
 				// Settings container
@@ -642,7 +924,8 @@ module.exports = class BasePlugin {
 				pageSettings.forEach(setting => {
 					if (setting.type === 'header') {
 						const header = document.createElement('h3');
-						header.textContent = setting.text;
+						const headerKey = headerTranslationMap[setting.text];
+						header.textContent = headerKey ? t(headerKey) : setting.text;
 						header.style.cssText = 'margin: 20px 0 10px 0; font-size: 16px; font-weight: 600; color: var(--header-primary); border-left: 4px solid var(--brand-experiment); padding-left: 12px;';
 						settingsContainer.appendChild(header);
 						return;
@@ -657,7 +940,7 @@ module.exports = class BasePlugin {
 					
 					if (setting.type === 'info') {
 						const info = document.createElement('div');
-						info.textContent = setting.text;
+						info.textContent = t('infoWarning');
 						info.style.cssText = 'padding: 12px 16px; background: var(--info-warning-background); border-left: 4px solid var(--info-warning-foreground); border-radius: 4px; color: var(--text-normal); font-size: 13px; line-height: 1.5;';
 						settingsContainer.appendChild(info);
 						return;
@@ -672,11 +955,11 @@ module.exports = class BasePlugin {
 					labelDiv.style.cssText = 'flex: 1;';
 					
 					const label = document.createElement('div');
-					label.textContent = setting.name;
+					label.textContent = setting.id ? t(setting.id) : setting.name;
 					label.style.cssText = 'font-weight: 500; color: var(--header-primary); font-size: 15px; margin-bottom: 4px;';
 					
 					const note = document.createElement('div');
-					note.textContent = setting.note;
+					note.textContent = setting.id ? t(setting.id + 'Note') : setting.note;
 					note.style.cssText = 'font-size: 13px; color: var(--text-muted); line-height: 1.4;';
 					
 					labelDiv.appendChild(label);
@@ -749,7 +1032,7 @@ module.exports = class BasePlugin {
 				version.style.cssText = 'font-size: 12px; color: var(--text-muted);';
 				
 				const debugBtn = document.createElement('button');
-				debugBtn.textContent = '📋 Copy Debug Info';
+				debugBtn.textContent = t('copyDebugInfo');
 				debugBtn.style.cssText = 'padding: 8px 16px; background: var(--button-secondary-background); color: var(--text-normal); border: none; border-radius: 4px; cursor: pointer; font-size: 13px; transition: background 0.15s;';
 				debugBtn.onmouseenter = () => debugBtn.style.background = 'var(--button-secondary-background-hover)';
 				debugBtn.onmouseleave = () => debugBtn.style.background = 'var(--button-secondary-background)';
@@ -837,13 +1120,13 @@ module.exports = class BasePlugin {
 		try {
 			if (typeof UI.showNotification === 'function') {
 				UI.showNotification({
-					title: `${this.meta.name} Update Available!`,
-					content: `Version ${remoteMeta.version} is now available!`,
+					title: `${this.meta.name} ${t('updateAvailableTitle')}`,
+					content: t('updateAvailableContent', { version: remoteMeta.version }),
 					type: 'info',
 					duration: 1/0,
 					actions: [
 						{
-							label: 'Update Now',
+							label: t('updateNow'),
 							onClick: async () => {
 								if (remoteFile) {
 									try {
@@ -854,19 +1137,19 @@ module.exports = class BasePlugin {
 										let currentVersionInfo = Data.load(this.meta.name, "currentVersionInfo") || {};
 										currentVersionInfo.hasShownChangelog = false;
 										Data.save(this.meta.name, "currentVersionInfo", currentVersionInfo);
-										UI.showToast('Update downloaded! Please reload Discord.', { type: 'success' });
+										UI.showToast(t('updateDownloaded'), { type: 'success' });
 									} catch (err) {
 										this.log('error', 'Failed to download update', err.message);
-										UI.showToast('Failed to download update', { type: 'error' });
+										UI.showToast(t('updateFailed'), { type: 'error' });
 									}
 								}
 							}
 						},
-						{ label: 'Update Later', onClick: () => {} }
+						{ label: t('updateLater'), onClick: () => {} }
 					]
 				});
 			} else {
-				UI.showToast(`Update ${remoteMeta.version} available for ${this.meta.name}!`, { type: 'info' });
+				UI.showToast(`${this.meta.name} ${t('updateAvailableContent', { version: remoteMeta.version })}`, { type: 'info' });
 			}
 		} catch (e) {
 			this.log('warn', 'Failed to show update notification', e.message);
@@ -879,13 +1162,13 @@ module.exports = class BasePlugin {
 			const questName = quest?.config?.messages?.questName ?? quest?.config?.application?.name ?? 'Quest';
 			if (typeof UI.showNotification === 'function') {
 				UI.showNotification({
-					title: completed ? 'Quest Completed!' : 'Quest Started',
-					content: completed ? `Successfully completed ${questName}!` : `Farming ${questName}...`,
+					title: completed ? t('questCompletedTitle') : t('questStartedTitle'),
+					content: completed ? t('questCompletedContent', { name: questName }) : t('questStartedContent', { name: questName }),
 					type: completed ? 'success' : 'info',
 					duration: 5000
 				});
 			} else {
-				UI.showToast(completed ? `Quest completed: ${questName}` : `Farming: ${questName}`, { 
+				UI.showToast(completed ? t('questCompletedToast', { name: questName }) : t('questStartedToast', { name: questName }), { 
 					type: completed ? 'success' : 'info' 
 				});
 			}
@@ -1307,13 +1590,13 @@ module.exports = class BasePlugin {
 			const questName = quest?.config?.application?.name ?? 'Unknown Quest';
 			if (typeof UI.showNotification === 'function') {
 				UI.showNotification({
-					title: 'New Quest Available!',
-					content: `Please accept the quest "${questName}" to start auto farming.`,
+					title: t('newQuestTitle'),
+					content: t('newQuestContent', { name: questName }),
 					type: 'info',
 					duration: 5 * 60 * 1000,
 					actions: [
 						{
-							label: 'Go to Quests',
+							label: t('goToQuests'),
 							onClick: () => {
 								try {
 									open(`/quests/${quest.id}`);
@@ -1323,7 +1606,7 @@ module.exports = class BasePlugin {
 							}
 						},
 						{
-							label: 'Remind Me Later',
+							label: t('remindMeLater'),
 							onClick: () => {
 								setTimeout(() => {
 									this.showNewQuestNotification(quest);
@@ -1333,7 +1616,7 @@ module.exports = class BasePlugin {
 					]
 				});
 			} else {
-				UI.showToast(`New quest available: ${questName}`, { type: 'info' });
+				UI.showToast(t('newQuestToast', { name: questName }), { type: 'info' });
 			}
 		} catch (e) {
 			this.log('debug', 'Failed to show new quest notification', e.message);

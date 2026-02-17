@@ -1,4 +1,4 @@
-# FarmQuests v1.0.5 - Robustness Improvements Summary
+# FarmQuests v1.6.2 - Robustness Improvements Summary
 
 ## Overview
 This document outlines the comprehensive enhancements made to the FarmQuests plugin to ensure reliable operation and prevent future errors.
@@ -39,12 +39,14 @@ New `initializeSettings()` method that:
   "delayBetweenFarms": 2,
   "checkForNewQuests": 5,
   "maxFallbackAttempts": 30,
-  "enableVerboseLogging": false
+  "enableVerboseLogging": false,
+  "language": "en"
 }
 ```
 
 ### 3. **Modern UI/UX Settings Panel** ✅
 The `getSettingsPanel()` now features:
+- **Language Selector:** Dropdown at the top to switch between English, Khmer, and Chinese
 - **Tabbed Interface:** Two pages (⚙️ Automation, 🔧 Advanced)
 - **Section Headers:** Visual groupings with colored borders
 - **Dividers:** Clean separation between logical groups
@@ -57,6 +59,14 @@ The `getSettingsPanel()` now features:
 - **Comprehensive event handlers** covering all settings
 - **Try-catch wrapper** with detailed error logging
 - **Automatic UI triggers** for settings that affect plugin behavior
+
+### 4. **Multi-Language Localization System** ✅
+A full `translations` dictionary and `t()` helper function provide:
+- **3 languages:** English (en), Khmer (km), Chinese (zh)
+- **Complete coverage:** All setting names, notes, headers, tabs, notifications, toasts, and buttons
+- **Placeholder interpolation:** `t('key', { name: value })` replaces `{name}` in translated strings
+- **Persistent preference:** Language saved to config.json via `BdApi.Data`
+- **Instant refresh:** Changing language re-renders the entire settings panel
 
 **Previous State:** Only 3 settings were properly handled  
 **Current State:** All 13 settings properly validated and logged
