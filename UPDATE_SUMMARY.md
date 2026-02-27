@@ -1,10 +1,35 @@
 # FarmQuests Plugin - Robustness Update Complete ✅
 
-## What Was Updated (v1.7.0 - February 2026)
+## What Was Updated (v1.8.0 - February 2026)
 
-Your FarmQuests plugin has been comprehensively enhanced with **a modern UI/UX settings panel**, **status dashboard**, **quick action buttons**, **multi-language support (English, Khmer, Chinese)**, **13 configurable settings**, **robust error handling, unified logging, memory leak fixes, and automatic settings initialization** to prevent future errors.
+Your FarmQuests plugin has been comprehensively enhanced with **stuck detection and auto-recovery**, **a modern UI/UX settings panel**, **status dashboard**, **quick action buttons**, **multi-language support (English, Khmer, Chinese)**, **15 configurable settings**, **robust error handling, unified logging, memory leak fixes, and automatic settings initialization** to prevent future errors.
 
-### 🎨 NEW in v1.7.0 - Enhanced Settings Panel UI/UX
+### 🔄 NEW in v1.8.0 - Stuck Detection & Auto-Recovery
+
+#### Intelligent Progress Monitoring
+- **30-second interval** checks all active quests for progress
+- Tracks quest progress via `_questProgressTracker` Map
+- Detects quests with **no progress for 3 minutes** (configurable)
+- Supports all farmable quest types: PLAY_ON_DESKTOP, STREAM_ON_DESKTOP, PLAY_ACTIVITY
+
+#### Automatic Recovery
+When a quest is detected as stuck:
+1. **Stops** the stuck quest farming
+2. **Cleans up** internal trackers and subscriptions
+3. **Refreshes** Discord quest stores
+4. **Restarts** the quest automatically
+
+#### New Settings
+| Setting | Type | Default | Description |
+|---------|------|---------|-------------|
+| **Stuck Detection** | Toggle | ON | Enable auto-detection of stuck quests |
+| **Stuck Timeout** | Number | 3 min | Time with no progress before triggering recovery |
+
+#### Status Dashboard Update
+- Added **5th stat card** showing "Stuck" count
+- Real-time display of detected stuck quests
+
+### 🎨 v1.7.0 - Enhanced Settings Panel UI/UX
 
 #### Status Dashboard
 - **Live status indicator** showing active/idle state with pulse animation
@@ -226,8 +251,9 @@ If any setting gets corrupted, these defaults will be restored:
 
 ## 📝 Version Info
 
-- **Plugin Version:** 1.7.0
+- **Plugin Version:** 1.8.0
 - **Last Updated:** February 2026
+- **Stuck Detection:** ✅ Complete
 - **UI/UX Update:** Complete
 - **Robustness Update:** Complete
 - **Multi-Language:** ✅ English, Khmer, Chinese
