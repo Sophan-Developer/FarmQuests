@@ -24,7 +24,7 @@ The best starting point! This guide covers:
 
 ### 2. **QUICK_REFERENCE.md** (Keep Open)
 A handy reference card with:
-- ⚙️ All 13 settings at a glance
+- ⚙️ All 15 settings at a glance
 - 📊 Recommended setting combinations
 - 🖥️ Console commands
 - 🚨 Common issues & solutions
@@ -125,7 +125,7 @@ Confirmation that everything is working:
 
 ```
 BetterDiscord/plugins/
-├── FarmQuests.plugin.js ...................... Main plugin (1013 lines)
+├── FarmQuests.plugin.js ...................... Main plugin (~2800 lines)
 ├── FarmQuests.config.json ..................... Settings storage
 │
 ├── UPDATE_SUMMARY.md ......................... ← START HERE
@@ -180,7 +180,7 @@ BetterDiscord/plugins/
 | Need | File | Section |
 |------|------|---------|
 | Set up plugin | UPDATE_SUMMARY | Next Steps |
-| Get settings help | QUICK_REFERENCE | 10 Settings Table |
+| Get settings help | QUICK_REFERENCE | 15 Settings Table |
 | Report issue | FarmQuests/README | Troubleshooting |
 | Understand code | IMPROVEMENTS | Code Changes |
 | Verify working | VALIDATION | Validation Results |
@@ -276,10 +276,10 @@ This documentation package includes:
 
 | Aspect | Details |
 |--------|---------|
-| **Version** | 1.0.5 |
+| **Version** | 1.8.0 |
 | **Total Docs** | 6 files |
-| **Total Content** | ~15,000 words |
-| **Last Updated** | 2024 |
+| **Total Content** | ~18,000 words |
+| **Last Updated** | February 2026 |
 | **Status** | Complete |
 | **Completeness** | 100% |
 
@@ -309,10 +309,10 @@ This documentation package includes:
 
 ---
 
-**Welcome to FarmQuests v1.0.5!** 🎉
+**Welcome to FarmQuests v1.8.0!** 🎉
 
 Pick a document above and start reading. If you have any issues, check QUICK_REFERENCE.md first - it probably has the answer!
 
 ---
 
-**Index Version:** 1.0 | **Plugin Version:** 1.0.5 | **Status:** ✅ Complete
+**Index Version:** 1.8.0 | **Plugin Version:** 1.8.0 | **Status:** ✅ Complete
