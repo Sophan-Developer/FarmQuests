@@ -1,7 +1,49 @@
-# FarmQuests v1.7.0 - Robustness Improvements Summary
+# FarmQuests v1.8.0 - Robustness Improvements Summary
 
 ## Overview
 This document outlines the comprehensive enhancements made to the FarmQuests plugin to ensure reliable operation and prevent future errors.
+
+## What's New in v1.8.0
+
+### Stuck Detection & Auto-Recovery ✅
+
+#### Progress Monitoring System
+- **30-second interval** checking all active quests
+- `_questProgressTracker` Map tracks: `{questId -> {lastProgress, lastUpdateTime, startTime}}`
+- `_stuckQuests` Set tracks quests detected as stuck
+- Configurable timeout (default 3 minutes) before recovery
+
+#### Auto-Recovery Process
+When a quest shows no progress for the configured timeout:
+1. **Stop** - Calls `stopQuest(questId)` to halt farming
+2. **Cleanup** - Removes from `_questProgressTracker` and `_stuckQuests`
+3. **Refresh** - Triggers `refreshQuestsStore()` to reload Discord stores
+4. **Restart** - Re-initiates quest farming after 5-second delay
+
+#### New Methods Added
+| Method | Purpose |
+|--------|--------|
+| `startStuckDetection()` | Initializes 30s interval monitoring |
+| `stopStuckDetection()` | Cleans up interval and trackers |
+| `trackQuestProgress(questId, progress)` | Records progress from heartbeat events |
+| `checkForStuckQuests()` | Evaluates all tracked quests for stalls |
+| `handleStuckQuest(questId)` | Executes recovery procedure |
+| `getStuckCount()` | Returns count for status dashboard |
+
+#### New Instance Properties
+```javascript
+this._questProgressTracker = new Map();  // {questId -> {lastProgress, lastUpdateTime, startTime}}
+this._stuckQuests = new Set();           // Quests detected as stuck
+this._stuckCheckInterval = null;          // 30-second interval ID
+```
+
+#### Status Dashboard Update
+- **5 stat cards** now displayed: Farming / Available / Completed / Failed / **Stuck**
+- Grid updated from `repeat(4, 1fr)` to `repeat(5, 1fr)`
+
+**Location:** [FarmQuests.plugin.js](../FarmQuests.plugin.js#L2600-L2750)
+
+---
 
 ## What's New in v1.7.0
 
@@ -74,6 +116,8 @@ New `initializeSettings()` method that:
   "checkForNewQuests": 5,
   "maxFallbackAttempts": 30,
   "enableVerboseLogging": false,
+  "stuckDetection": true,
+  "stuckTimeout": 3,
   "language": "en"
 }
 ```
@@ -204,6 +248,8 @@ After reloading the plugin, verify:
 - [ ] Plugin detects available quests
 - [ ] Plugin farms multiple quests respecting `concurrentFarms` limit
 - [ ] Quests complete successfully
+- [ ] Stuck detection triggers after 3 min of no progress
+- [ ] Auto-recovery restarts stuck quests
 
 ## Error Prevention Features
 
@@ -212,6 +258,7 @@ After reloading the plugin, verify:
 2. **Store Fallbacks** – Multiple modules are tried for quest completion
 3. **API Fallbacks** – Multiple API endpoints attempted
 4. **Data Validation** – All numeric settings validated before use
+5. **Stuck Detection** – Auto-recovery when quests stop progressing
 
 ### Error Transparency
 1. **Unified Logging** – All errors appear with `[FarmQuests]` prefix
@@ -250,7 +297,7 @@ After reloading the plugin, verify:
 
 ---
 
-**Version:** 1.7.0  
+**Version:** 1.8.0  
 **Date:** February 2026  
 **Improvements By:** GitHub Copilot  
-**Goal:** Maximum reliability with transparent error handling
+**Goal:** Maximum reliability with transparent error handling and stuck recovery

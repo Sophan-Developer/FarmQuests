@@ -1,7 +1,7 @@
 /**
  * @name FarmQuests
  * @description A plugin that farms you multiple discord quests in background simultaneously.
- * @version 1.7.0
+ * @version 1.8.0
  * @author Sophan-Developer
  * @authorLink https://github.com/Sophan-Developer
  * @website https://github.com/Sophan-Developer/FarmQuests
@@ -108,6 +108,17 @@ const translations = {
         resetDefaults: "Reset to Defaults",
         resetConfirm: "Are you sure you want to reset all settings to defaults?",
         settingsReset: "Settings reset to defaults!",
+        // Stuck Detection
+        stuckDetection: "Stuck Detection",
+        stuckDetectionNote: "Automatically detect and recover quests that stop progressing",
+        stuckTimeout: "Stuck Timeout (minutes)",
+        stuckTimeoutNote: "Consider quest stuck if no progress for this many minutes",
+        statusStuck: "Stuck",
+        stuckDetectedTitle: "Quest Stuck Detected",
+        stuckDetectedContent: "Quest \"{name}\" appears stuck. Attempting recovery...",
+        stuckRecoveredTitle: "Quest Recovered",
+        stuckRecoveredContent: "Quest \"{name}\" has been restarted.",
+        stuckRecoveryFailed: "Recovery failed for \"{name}\". Try manually.",
     },
     km: {
         // Tabs
@@ -202,6 +213,17 @@ const translations = {
         resetDefaults: "កំណត់ទៅលំនាំដើម",
         resetConfirm: "តើអ្នកប្រាកដថាចង់កំណត់ការកំណត់ទាំងអស់ទៅលំនាំដើមទេ?",
         settingsReset: "ការកំណត់ត្រូវបានកំណត់ទៅលំនាំដើម!",
+        // Stuck Detection
+        stuckDetection: "ការរកឃើញជាប់គាំង",
+        stuckDetectionNote: "រកឃើញ និងស្ដារបេសកកម្មដែលឈប់ដំណើរការដោយស្វ័យប្រវត្តិ",
+        stuckTimeout: "ពេលវេលាជាប់គាំង (នាទី)",
+        stuckTimeoutNote: "ចាត់ទុកថាបេសកកម្មជាប់គាំង បើគ្មានវឌ្ឍនភាពក្នុងរយៈពេលប៉ុន្មាននាទីនេះ",
+        statusStuck: "ជាប់គាំង",
+        stuckDetectedTitle: "រកឃើញបេសកកម្មជាប់គាំង",
+        stuckDetectedContent: "បេសកកម្ម \"{name}\" ហាក់ដូចជាជាប់គាំង។ កំពុងព្យាយាមស្ដារ...",
+        stuckRecoveredTitle: "បេសកកម្មត្រូវបានស្ដារ",
+        stuckRecoveredContent: "បេសកកម្ម \"{name}\" ត្រូវបានចាប់ផ្ដើមឡើងវិញ។",
+        stuckRecoveryFailed: "ការស្ដារបរាជ័យសម្រាប់ \"{name}\"។ សូមព្យាយាមដោយដៃ។",
     },
     zh: {
         // Tabs
@@ -296,6 +318,17 @@ const translations = {
         resetDefaults: "恢复默认设置",
         resetConfirm: "您确定要将所有设置恢复为默认值吗？",
         settingsReset: "设置已恢复为默认值！",
+        // Stuck Detection
+        stuckDetection: "卡住检测",
+        stuckDetectionNote: "自动检测并恢复停止进展的任务",
+        stuckTimeout: "卡住超时（分钟）",
+        stuckTimeoutNote: "如果多少分钟内没有进展，则认为任务卡住",
+        statusStuck: "卡住",
+        stuckDetectedTitle: "检测到任务卡住",
+        stuckDetectedContent: "任务 \"{name}\" 似乎卡住了。正在尝试恢复...",
+        stuckRecoveredTitle: "任务已恢复",
+        stuckRecoveredContent: "任务 \"{name}\" 已重新启动。",
+        stuckRecoveryFailed: "恢复 \"{name}\" 失败。请手动尝试。",
     }
 };
 
@@ -313,10 +346,17 @@ function t(key, params = {}) {
 const config = {
     info: {
         name: 'FarmQuests',
-        version: '1.7.0',
+        version: '1.8.0',
         github_raw: 'https://raw.githubusercontent.com/Sophan-Developer/FarmQuests/main/FarmQuests.plugin.js'
     },
     changelog: [
+        { title: "Stuck Detection & Auto-Recovery (Feb 2026)", type: "added", items: [
+            "Added automatic stuck quest detection - monitors progress every 30 seconds",
+            "Auto-recovery for stuck quests - refreshes stores and restarts farming",
+            "Configurable stuck timeout (default: 3 minutes)",
+            "New status indicator showing stuck quests count",
+            "Full localization for stuck detection (EN/KM/ZH)"
+        ]},
         { title: "Unsupported Quest Handling (Feb 2026)", type: "added", items: [
             "Added ACHIEVEMENT_IN_ACTIVITY quest type detection",
             "New user-friendly modal for unsupported server-side quests",
@@ -363,6 +403,8 @@ const config = {
         { type: "switch", id: "retryFailedQuests", name: "Retry Failed Quests", note: "Automatically retry quests that fail to complete", value: true, page: 1 },
         { type: "switch", id: "verifyQuestCompletion", name: "Verify Quest Completion", note: "Double-check that quests are properly completed and claimed", value: true, page: 1 },
         { type: "number", id: "claimRetryAttempts", name: "Claim Retry Attempts", note: "Number of times to retry claiming rewards if it fails", value: 3, min: 1, max: 10, step: 1, page: 1 },
+        { type: "switch", id: "stuckDetection", name: "Stuck Detection", note: "Automatically detect and recover quests that stop progressing", value: true, page: 1 },
+        { type: "number", id: "stuckTimeout", name: "Stuck Timeout (minutes)", note: "Consider quest stuck if no progress for this many minutes", value: 3, min: 1, max: 10, step: 1, page: 1 },
         { type: "divider", page: 1 },
         
         { type: "header", text: "🔔 Notifications & UI", page: 1 },
@@ -580,6 +622,9 @@ module.exports = class BasePlugin {
 		const savedFailedQuests = BdApi.Data.load(this.meta.name, 'failedClaimQuests') || [];
 		this.failedClaimQuests = new Set(savedFailedQuests); // Track quests that failed with 400 (manual claim required)
 		this._unsupportedQuests = new Set(); // Track quests with unsupported task types (like ACHIEVEMENT_IN_ACTIVITY)
+		this._questProgressTracker = new Map(); // Track { questId -> { lastProgress, lastUpdateTime, startTime } }
+		this._stuckQuests = new Set(); // Track quests detected as stuck
+		this._stuckCheckInterval = null; // Interval for stuck detection
 		if (savedFailedQuests.length > 0) {
 			this.log('info', `Loaded ${savedFailedQuests.length} quest(s) that require manual claim from storage`);
 		}
@@ -682,6 +727,8 @@ module.exports = class BasePlugin {
 				retryFailedQuests: true,
 				questNotifications: true,
 				autoStartVideoQuests: true,
+				stuckDetection: true,
+				stuckTimeout: 3,
 				// Page 2: Advanced Settings
 				checkForNewQuests: 5,
 				concurrentFarms: 3,
@@ -983,7 +1030,7 @@ module.exports = class BasePlugin {
 				
 				// Status cards
 				const statusCards = document.createElement('div');
-				statusCards.style.cssText = 'display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;';
+				statusCards.style.cssText = 'display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px;';
 				
 				const createStatusCard = (label, value, color = 'var(--text-normal)') => {
 					const card = document.createElement('div');
@@ -999,11 +1046,13 @@ module.exports = class BasePlugin {
 				const availableCount = self.farmableQuests?.length ?? 0;
 				const completedCount = (self.availableQuests ?? []).filter(q => q?.userStatus?.completedAt).length;
 				const failedCount = self.failedClaimQuests?.size ?? 0;
+				const stuckCount = self._stuckQuests?.size ?? 0;
 				
 				statusCards.appendChild(createStatusCard(t('statusFarming'), farmingCount, farmingCount > 0 ? 'var(--status-positive)' : 'var(--text-normal)'));
 				statusCards.appendChild(createStatusCard(t('statusAvailable'), availableCount, availableCount > 0 ? 'var(--brand-experiment)' : 'var(--text-normal)'));
 				statusCards.appendChild(createStatusCard(t('statusCompleted'), completedCount, 'var(--status-positive)'));
 				statusCards.appendChild(createStatusCard(t('statusFailed'), failedCount, failedCount > 0 ? 'var(--status-danger)' : 'var(--text-muted)'));
+				statusCards.appendChild(createStatusCard(t('statusStuck'), stuckCount, stuckCount > 0 ? 'var(--status-warning, #faa61a)' : 'var(--text-muted)'));
 				
 				statusSection.appendChild(statusCards);
 				container.appendChild(statusSection);
@@ -1188,6 +1237,8 @@ module.exports = class BasePlugin {
 								if (switchInput.checked) self.startAutoStart(); else self.stopAutoStart();
 							} else if (setting.id === 'checkForNewQuests') {
 								self.startInterval();
+							} else if (setting.id === 'stuckDetection') {
+								if (switchInput.checked) self.startStuckDetection(); else self.stopStuckDetection();
 							}
 						};
 						
@@ -1280,7 +1331,9 @@ module.exports = class BasePlugin {
 							concurrentFarms: 3,
 							delayBetweenFarms: 2,
 							maxFallbackAttempts: 30,
-							claimRetryAttempts: 3
+							claimRetryAttempts: 3,
+							stuckDetection: true,
+							stuckTimeout: 3
 						};
 						for (const [key, value] of Object.entries(defaults)) {
 							self.settings[key] = value;
@@ -1505,6 +1558,7 @@ module.exports = class BasePlugin {
 		this.runImmediateQuestCheck();
 		
 		this.startInterval();
+		this.startStuckDetection(); // Start stuck quest detection
 		try {
 			if (this.settings.autoStartVideoQuests ?? getSetting('autoStartVideoQuests')?.value) {
 				this.startAutoStart();
@@ -1530,6 +1584,14 @@ module.exports = class BasePlugin {
 		this.fakeApplications.clear();
 		this.failedClaimQuests.clear();
 		this._unsupportedQuests?.clear();
+		this._questProgressTracker?.clear();
+		this._stuckQuests?.clear();
+		
+		// Stop stuck detection interval
+		if (this._stuckCheckInterval) {
+			clearInterval(this._stuckCheckInterval);
+			this._stuckCheckInterval = null;
+		}
 		
 		// Cleanup all registered intervals
 		if (this._cleanupRegistry?.intervals) {
@@ -1633,6 +1695,156 @@ module.exports = class BasePlugin {
 			clearInterval(this.updateInterval);
 			this.updateInterval = null;
 		}
+	}
+
+	// ═══════════════════════════════════════════════════════════════
+	// STUCK DETECTION & AUTO-RECOVERY
+	// ═══════════════════════════════════════════════════════════════
+	
+	startStuckDetection() {
+		if (!this.settings.stuckDetection) return;
+		
+		this.stopStuckDetection();
+		// Check for stuck quests every 30 seconds
+		this._stuckCheckInterval = setInterval(() => {
+			this.checkForStuckQuests();
+		}, 30 * 1000);
+		this.log('debug', 'Stuck detection started');
+	}
+	
+	stopStuckDetection() {
+		if (this._stuckCheckInterval) {
+			clearInterval(this._stuckCheckInterval);
+			this._stuckCheckInterval = null;
+		}
+	}
+	
+	/**
+	 * Track progress update for a quest (call this when heartbeat succeeds)
+	 */
+	trackQuestProgress(questId, progress) {
+		const now = Date.now();
+		const existing = this._questProgressTracker.get(questId);
+		
+		if (!existing) {
+			// First time tracking this quest
+			this._questProgressTracker.set(questId, {
+				lastProgress: progress,
+				lastUpdateTime: now,
+				startTime: now
+			});
+		} else if (progress > existing.lastProgress) {
+			// Progress increased - update tracker
+			this._questProgressTracker.set(questId, {
+				lastProgress: progress,
+				lastUpdateTime: now,
+				startTime: existing.startTime
+			});
+			// Remove from stuck list if it was there
+			this._stuckQuests.delete(questId);
+		}
+		// If progress didn't increase, don't update lastUpdateTime (to detect stuck)
+	}
+	
+	/**
+	 * Check all farming quests for stuck status
+	 */
+	checkForStuckQuests() {
+		if (!this.settings.stuckDetection) return;
+		
+		const now = Date.now();
+		const stuckTimeoutMs = (this.settings.stuckTimeout ?? 3) * 60 * 1000; // Default 3 minutes
+		
+		for (const [questId, isActive] of this.farmingQuest) {
+			if (!isActive) continue; // Skip quests that are finishing
+			
+			const tracker = this._questProgressTracker.get(questId);
+			if (!tracker) continue; // No tracking data yet
+			
+			const timeSinceLastProgress = now - tracker.lastUpdateTime;
+			
+			if (timeSinceLastProgress > stuckTimeoutMs) {
+				// Quest appears stuck!
+				if (!this._stuckQuests.has(questId)) {
+					this._stuckQuests.add(questId);
+					this.log('warn', `Quest ${questId} appears stuck - no progress for ${Math.round(timeSinceLastProgress / 1000)}s`);
+					this.handleStuckQuest(questId);
+				}
+			}
+		}
+	}
+	
+	/**
+	 * Handle a stuck quest - attempt recovery
+	 */
+	async handleStuckQuest(questId) {
+		try {
+			// Find the quest object
+			const quest = this.availableQuests?.find(q => q.id === questId);
+			const questName = quest?.config?.messages?.questName ?? `Quest ${questId}`;
+			
+			// Notify user
+			if (this.settings.questNotifications) {
+				UI.showToast(t('stuckDetectedContent', { name: questName }), { type: 'warning' });
+			}
+			
+			this.log('info', `Attempting recovery for stuck quest: ${questName}`);
+			
+			// Step 1: Stop the stuck quest
+			this.farmingQuest.set(questId, false);
+			
+			// Step 2: Clean up fake games/streams for this quest
+			this.fakeGames.delete(questId);
+			this.fakeApplications.delete(questId);
+			
+			// Step 3: Clear progress tracker
+			this._questProgressTracker.delete(questId);
+			
+			// Step 4: Wait a moment
+			await new Promise(r => setTimeout(r, 2000));
+			
+			// Step 5: Refresh stores
+			this.ensureStores();
+			
+			// Step 6: Wait again
+			await new Promise(r => setTimeout(r, 1000));
+			
+			// Step 7: Remove from farming map to allow restart
+			this.farmingQuest.delete(questId);
+			this._stuckQuests.delete(questId);
+			
+			// Step 8: Re-fetch quest and restart
+			const store = this.QuestsStore ?? getQuestsStore();
+			const freshQuest = store?.getQuest?.(questId);
+			
+			if (freshQuest && !freshQuest.userStatus?.completedAt) {
+				this.log('info', `Restarting quest: ${questName}`);
+				
+				// Small delay then restart
+				setTimeout(() => {
+					this.farmQuest(freshQuest);
+				}, 1000);
+				
+				if (this.settings.questNotifications) {
+					UI.showToast(t('stuckRecoveredContent', { name: questName }), { type: 'success' });
+				}
+			} else {
+				this.log('info', `Quest ${questName} completed or no longer available, skipping restart`);
+			}
+			
+		} catch (e) {
+			this.log('error', `Failed to recover stuck quest ${questId}:`, e);
+			const quest = this.availableQuests?.find(q => q.id === questId);
+			const questName = quest?.config?.messages?.questName ?? `Quest ${questId}`;
+			UI.showToast(t('stuckRecoveryFailed', { name: questName }), { type: 'error' });
+		}
+	}
+	
+	/**
+	 * Get count of stuck quests (for status dashboard)
+	 */
+	getStuckCount() {
+		return this._stuckQuests?.size ?? 0;
 	}
 
 	// Automatically claim all completed quests
@@ -2385,6 +2597,7 @@ module.exports = class BasePlugin {
 								if (event.questId !== quest.id) return;
 								let progress = quest.config.configVersion === 1 ? event.userStatus.streamProgressSeconds : Math.floor(event.userStatus.progress.PLAY_ON_DESKTOP.value);
 								console.log(`Quest progress ${questName}: ${progress}/${secondsNeeded}`);
+								this.trackQuestProgress(quest.id, progress); // Track for stuck detection
 
 								if (!this.farmingQuest.get(quest.id) || progress >= secondsNeeded) {
 									console.log("Stopping farming quest:", questName);
@@ -2485,6 +2698,7 @@ module.exports = class BasePlugin {
 						if (event.questId !== quest.id) return;
 						let progress = quest.config.configVersion === 1 ? event.userStatus.streamProgressSeconds : Math.floor(event.userStatus.progress.STREAM_ON_DESKTOP.value);
 						console.log(`Quest progress ${questName}: ${progress}/${secondsNeeded}`);
+						this.trackQuestProgress(quest.id, progress); // Track for stuck detection
 
 						if (!this.farmingQuest.get(quest.id) || progress >= secondsNeeded) {
 							console.log("Stopping farming quest:", questName);
@@ -2540,6 +2754,7 @@ module.exports = class BasePlugin {
 							const res = await (this.api ?? api)?.post({ url: `/quests/${quest.id}/heartbeat`, body: { stream_key: streamKey, terminal: false } });
 							const progress = res.body.progress.PLAY_ACTIVITY.value;
 							console.log(`Quest progress ${questName}: ${progress}/${secondsNeeded}`);
+							this.trackQuestProgress(quest.id, progress); // Track for stuck detection
 
 							await new Promise(resolve => setTimeout(resolve, 20 * 1000));
 

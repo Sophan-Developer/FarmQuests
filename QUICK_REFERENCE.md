@@ -8,10 +8,12 @@
 5. **Enroll:** Manually start at least one quest
 6. **Wait:** Plugin automatically detects and farms
 
-## ⚙️ 10 Settings at a Glance
+## ⚙️ Settings at a Glance
 
 | # | Setting | Type | Default | Purpose |
-|---|---------|------|---------|---------|| 0 | Language | Dropdown | English | UI language (English / ខ្មែរ / 中文) || 1 | Interval to check for new quests (min) | Number | 5 | How often to look for new quests |
+|---|---------|------|---------|---------|
+| 0 | Language | Dropdown | English | UI language (English / ខ្មែរ / 中文) |
+| 1 | Interval to check for new quests (min) | Number | 5 | How often to look for new quests |
 | 2 | Auto-start video quests | Toggle | OFF | Automatically click "Start Video Quest" |
 | 3 | Max fallback attempts | Number | 30 | Retry attempts before forced completion |
 | 4 | Concurrent farms | Number | 3 | Max quests farming at once |
@@ -24,6 +26,8 @@
 | 11 | Auto-complete all quests | Toggle | OFF | Complete quests without watching |
 | 12 | Retry failed quests | Toggle | ON | Retry failed quest completions |
 | 13 | Quest notifications | Toggle | ON | Show completion notifications |
+| 14 | **Stuck Detection** | Toggle | ON | Auto-detect and recover stuck quests |
+| 15 | **Stuck Timeout (min)** | Number | 3 | Time before quest is considered stuck |
 
 ## 🔧 Recommended Settings
 
@@ -47,6 +51,8 @@ Page 2 - Advanced:
   Delay Between Farms: 2
   Quest Check Interval: 5
   Max Heartbeat Attempts: 30
+  ✓ Stuck Detection (auto-recovery)
+  Stuck Timeout: 3 minutes
   ✗ Verbose Logging
 ```
 
@@ -190,13 +196,14 @@ localStorage.setItem('BetterDiscord_Plugins_FarmQuests_enableVerboseLogging', tr
 4. Check console for `[FarmQuests]` error messages
 5. Review `IMPROVEMENTS.md` for technical details
 
-## 🎨 New in v1.7.0 - Enhanced Settings Panel
+## 🎨 v1.7.0 - Enhanced Settings Panel
 
 ### Status Dashboard
 - **Farming** - Number of quests currently being farmed
 - **Available** - Quests ready to farm
 - **Completed** - Successfully finished quests
 - **Failed** - Quests that failed to complete
+- **Stuck** - Quests detected as stuck (no progress)
 
 ### Quick Action Buttons
 | Button | Action |
@@ -214,6 +221,26 @@ localStorage.setItem('BetterDiscord_Plugins_FarmQuests_enableVerboseLogging', tr
 - Footer button to restore all settings to defaults
 - Confirmation prompt before reset
 
+## 🔄 New in v1.8.0 - Stuck Detection
+
+### Auto-Detection
+- Monitors quest progress every **30 seconds**
+- Detects quests with no progress for **3 minutes** (configurable)
+- Tracks all quest types: PLAY_ON_DESKTOP, STREAM_ON_DESKTOP, PLAY_ACTIVITY
+
+### Auto-Recovery
+When a stuck quest is detected:
+1. Stops the stuck quest
+2. Cleans up trackers
+3. Refreshes Discord quest stores
+4. Restarts the quest automatically
+
+### Settings
+| Setting | Default | Description |
+|---------|---------|-------------|
+| **Stuck Detection** | ON | Enable/disable stuck detection |
+| **Stuck Timeout** | 3 min | Time with no progress before recovery |
+
 ---
 
-**Version:** 1.7.0 | **Last Updated:** February 2026 | **Status:** Production Ready ✅
+**Version:** 1.8.0 | **Last Updated:** February 2026 | **Status:** Production Ready ✅

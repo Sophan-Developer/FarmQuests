@@ -15,12 +15,22 @@
     "questNotifications": false,
     "version": "1.1.0",
     "currentVersionInfo": {
-        "version": "1.6.2",
+        "version": "1.8.0",
         "hasShownChangelog": true
     },
     "autoClaimRewards": true,
     "verifyQuestCompletion": true,
     "claimRetryAttempts": 5,
-    "failedClaimQuests": [],
-    "language": "en"
+    "failedClaimQuests": [
+        "1470543032142139434",
+        "1473407935970410724",
+        "1470854078983569606",
+        "1468651135253483745",
+        "1475549097506115665",
+        "1471340231008583894",
+        "1474205151999950889"
+    ],
+    "language": "en",
+    "stuckDetection": true,
+    "stuckTimeout": 1
 }
