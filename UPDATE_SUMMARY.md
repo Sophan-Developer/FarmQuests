@@ -1,8 +1,34 @@
 # FarmQuests Plugin - Robustness Update Complete ✅
 
-## What Was Updated (v1.6.2 - February 2026)
+## What Was Updated (v1.7.0 - February 2026)
 
-Your FarmQuests plugin has been comprehensively enhanced with **multi-language support (English, Khmer, Chinese)**, **13 configurable settings**, **robust error handling, unified logging, memory leak fixes, and automatic settings initialization** to prevent future errors.
+Your FarmQuests plugin has been comprehensively enhanced with **a modern UI/UX settings panel**, **status dashboard**, **quick action buttons**, **multi-language support (English, Khmer, Chinese)**, **13 configurable settings**, **robust error handling, unified logging, memory leak fixes, and automatic settings initialization** to prevent future errors.
+
+### 🎨 NEW in v1.7.0 - Enhanced Settings Panel UI/UX
+
+#### Status Dashboard
+- **Live status indicator** showing active/idle state with pulse animation
+- **Real-time stats cards** displaying:
+  - Farming count (quests in progress)
+  - Available count (quests ready to farm)
+  - Completed count (finished quests)
+  - Failed count (quests that couldn't complete)
+
+#### Quick Action Buttons
+- **Check Now** - Immediately scan for new quests
+- **Stop All** - Stop all active quest farming
+- **Claim All** - Claim rewards for all completed quests
+- **Refresh Stores** - Reload Discord's quest stores
+
+#### Improved Number Inputs
+- **Stepper-style controls** with +/− buttons
+- Easier adjustment without typing
+- Still supports direct input
+
+#### Reset Defaults Button
+- One-click reset all settings to defaults
+- Confirmation prompt to prevent accidents
+- Located in footer alongside debug button
 
 ### Major Improvements Summary
 
@@ -200,8 +226,9 @@ If any setting gets corrupted, these defaults will be restored:
 
 ## 📝 Version Info
 
-- **Plugin Version:** 1.6.2
+- **Plugin Version:** 1.7.0
 - **Last Updated:** February 2026
+- **UI/UX Update:** Complete
 - **Robustness Update:** Complete
 - **Multi-Language:** ✅ English, Khmer, Chinese
 - **Memory Leak Fixes:** ✅ Yes

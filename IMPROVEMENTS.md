@@ -1,7 +1,41 @@
-# FarmQuests v1.6.2 - Robustness Improvements Summary
+# FarmQuests v1.7.0 - Robustness Improvements Summary
 
 ## Overview
 This document outlines the comprehensive enhancements made to the FarmQuests plugin to ensure reliable operation and prevent future errors.
+
+## What's New in v1.7.0
+
+### Enhanced Settings Panel UI/UX ✅
+
+#### Status Dashboard
+- **Live status indicator** with pulse animation when farming is active
+- **4 stat cards** showing: Farming / Available / Completed / Failed counts
+- Color-coded values for quick scanning
+- Updates when settings panel is refreshed
+
+#### Quick Action Buttons
+- **Check Now** - Trigger immediate quest scan
+- **Stop All** - Halt all active quest farming
+- **Claim All** - Batch claim completed quest rewards
+- **Refresh Stores** - Reload Discord quest stores
+
+#### Improved Number Inputs
+- Stepper-style controls with **+** / **−** buttons
+- Cleaner design with grouped button styling
+- Still accepts direct keyboard input
+
+#### Reset Defaults Button
+- Footer button to restore all settings
+- Confirmation dialog prevents accidental resets
+- Toast notification confirms reset
+
+#### Visual Polish
+- Wider tabs that fill available space
+- Better hover effects with border highlight
+- Smoother switch toggle animations
+- Compact spacing for more settings visible
+
+**Location:** [FarmQuests.plugin.js](../FarmQuests.plugin.js#L926-L1200)
 
 ## Key Improvements
 
@@ -216,7 +250,7 @@ After reloading the plugin, verify:
 
 ---
 
-**Version:** 1.0.5  
-**Date:** 2024  
+**Version:** 1.7.0  
+**Date:** February 2026  
 **Improvements By:** GitHub Copilot  
 **Goal:** Maximum reliability with transparent error handling

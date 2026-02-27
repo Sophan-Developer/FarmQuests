@@ -190,6 +190,30 @@ localStorage.setItem('BetterDiscord_Plugins_FarmQuests_enableVerboseLogging', tr
 4. Check console for `[FarmQuests]` error messages
 5. Review `IMPROVEMENTS.md` for technical details
 
+## 🎨 New in v1.7.0 - Enhanced Settings Panel
+
+### Status Dashboard
+- **Farming** - Number of quests currently being farmed
+- **Available** - Quests ready to farm
+- **Completed** - Successfully finished quests
+- **Failed** - Quests that failed to complete
+
+### Quick Action Buttons
+| Button | Action |
+|--------|--------|
+| **Check Now** | Immediately scan for new quests |
+| **Stop All** | Stop all active farming |
+| **Claim All** | Claim all completed quest rewards |
+| **Refresh Stores** | Reload Discord quest stores |
+
+### Stepper Number Inputs
+- Use **+** / **−** buttons for easy adjustment
+- Or type values directly in the input field
+
+### Reset Defaults
+- Footer button to restore all settings to defaults
+- Confirmation prompt before reset
+
 ---
 
-**Version:** 1.6.2 | **Last Updated:** February 2026 | **Status:** Production Ready ✅
+**Version:** 1.7.0 | **Last Updated:** February 2026 | **Status:** Production Ready ✅

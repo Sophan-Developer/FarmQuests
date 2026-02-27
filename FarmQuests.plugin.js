@@ -1,7 +1,7 @@
 /**
  * @name FarmQuests
  * @description A plugin that farms you multiple discord quests in background simultaneously.
- * @version 1.6.2
+ * @version 1.7.0
  * @author Sophan-Developer
  * @authorLink https://github.com/Sophan-Developer
  * @website https://github.com/Sophan-Developer/FarmQuests
@@ -85,6 +85,29 @@ const translations = {
         errorDismiss: "Dismiss",
         debugCopied: "Debug info copied to clipboard!",
         debugCopyFailed: "Failed to copy debug info",
+        // Unsupported quest
+        unsupportedQuestTitle: "Unsupported Quest Task",
+        unsupportedQuestContent: 'The quest "{name}" has an unsupported task type: {taskType}.',
+        unsupportedQuestNote: "This quest requires manual completion as it's a server-side quest.",
+        goToQuest: "Go to Quest",
+        // Status dashboard
+        statusTitle: "📊 Status Dashboard",
+        statusFarming: "Farming",
+        statusAvailable: "Available",
+        statusCompleted: "Completed",
+        statusFailed: "Failed Claims",
+        statusIdle: "Idle",
+        statusActive: "Active",
+        // Quick actions
+        quickActions: "⚡ Quick Actions",
+        checkNow: "🔍 Check Now",
+        stopAll: "⏹️ Stop All",
+        claimAll: "🎁 Claim All",
+        refreshStores: "🔄 Refresh",
+        // Settings
+        resetDefaults: "Reset to Defaults",
+        resetConfirm: "Are you sure you want to reset all settings to defaults?",
+        settingsReset: "Settings reset to defaults!",
     },
     km: {
         // Tabs
@@ -156,6 +179,29 @@ const translations = {
         errorDismiss: "បដិសេធ",
         debugCopied: "បានចម្លងព័ត៌មានបំបាត់កំហុសទៅ clipboard!",
         debugCopyFailed: "បរាជ័យក្នុងការចម្លងព័ត៌មានបំបាត់កំហុស",
+        // Unsupported quest
+        unsupportedQuestTitle: "បេសកកម្មដែលមិនគាំទ្រ",
+        unsupportedQuestContent: 'បេសកកម្ម "{name}" មានប្រភេទកិច្ចការដែលមិនគាំទ្រ: {taskType}។',
+        unsupportedQuestNote: "បេសកកម្មនេះត្រូវការបំពេញដោយដៃព្រោះវាជាបេសកកម្មផ្នែកម៉ាស៊ីនមេ។",
+        goToQuest: "ទៅកាន់បេសកកម្ម",
+        // Status dashboard
+        statusTitle: "📊 ផ្ទាំងស្ថានភាព",
+        statusFarming: "កំពុងដាំ",
+        statusAvailable: "មាន",
+        statusCompleted: "បានបញ្ចប់",
+        statusFailed: "ទាមទារបរាជ័យ",
+        statusIdle: "ឈប់សម្រាក",
+        statusActive: "សកម្ម",
+        // Quick actions
+        quickActions: "⚡ សកម្មភាពរហ័ស",
+        checkNow: "🔍 ពិនិត្យឥឡូវ",
+        stopAll: "⏹️ ឈប់ទាំងអស់",
+        claimAll: "🎁 ទាមទារទាំងអស់",
+        refreshStores: "🔄 ផ្ទុកឡើងវិញ",
+        // Settings
+        resetDefaults: "កំណត់ទៅលំនាំដើម",
+        resetConfirm: "តើអ្នកប្រាកដថាចង់កំណត់ការកំណត់ទាំងអស់ទៅលំនាំដើមទេ?",
+        settingsReset: "ការកំណត់ត្រូវបានកំណត់ទៅលំនាំដើម!",
     },
     zh: {
         // Tabs
@@ -227,6 +273,29 @@ const translations = {
         errorDismiss: "关闭",
         debugCopied: "调试信息已复制到剪贴板！",
         debugCopyFailed: "复制调试信息失败",
+        // Unsupported quest
+        unsupportedQuestTitle: "不支持的任务类型",
+        unsupportedQuestContent: '任务 "{name}" 有不支持的任务类型：{taskType}。',
+        unsupportedQuestNote: "此任务需要手动完成，因为它是服务器端任务。",
+        goToQuest: "前往任务",
+        // Status dashboard
+        statusTitle: "📊 状态仪表板",
+        statusFarming: "正在执行",
+        statusAvailable: "可用",
+        statusCompleted: "已完成",
+        statusFailed: "领取失败",
+        statusIdle: "空闲",
+        statusActive: "活跃",
+        // Quick actions
+        quickActions: "⚡ 快速操作",
+        checkNow: "🔍 立即检查",
+        stopAll: "⏹️ 停止所有",
+        claimAll: "🎁 领取所有",
+        refreshStores: "🔄 刷新",
+        // Settings
+        resetDefaults: "恢复默认设置",
+        resetConfirm: "您确定要将所有设置恢复为默认值吗？",
+        settingsReset: "设置已恢复为默认值！",
     }
 };
 
@@ -244,10 +313,22 @@ function t(key, params = {}) {
 const config = {
     info: {
         name: 'FarmQuests',
-        version: '1.6.2',
+        version: '1.7.0',
         github_raw: 'https://raw.githubusercontent.com/Sophan-Developer/FarmQuests/main/FarmQuests.plugin.js'
     },
     changelog: [
+        { title: "Unsupported Quest Handling (Feb 2026)", type: "added", items: [
+            "Added ACHIEVEMENT_IN_ACTIVITY quest type detection",
+            "New user-friendly modal for unsupported server-side quests",
+            "Tracks unsupported quests to avoid repeated alerts",
+            "Full localization for unsupported quest messages (EN/KM/ZH)"
+        ]},
+        { title: "Discord API Updates (Feb 2026)", type: "fixed", items: [
+            "Fixed API module resolution - updated from .tn to .Bo export pattern",
+            "Fixed FluxDispatcher lookup with searchExports option",
+            "Fixed exe name extraction for PLAY_ON_DESKTOP quests",
+            "Ported fixes from AutoQuestComplete v0.5.6"
+        ]},
         { title: "Multi-Language Support (Feb 2026)", type: "added", items: [
             "Added full localization: English, Khmer, and Chinese",
             "Language dropdown selector at the top of the settings panel",
@@ -326,7 +407,7 @@ let RunningGameStore = Webpack.Stores?.RunningGameStore ?? null;
 let QuestsStore = Webpack.Stores?.QuestStore ?? null;
 let ChannelStore = Webpack.Stores?.ChannelStore ?? null;
 let GuildChannelStore = Webpack.Stores?.GuildChannelStore ?? null;
-let FluxDispatcher = Webpack.getByKeys?.('dispatch', 'subscribe', 'register') ?? null;
+let FluxDispatcher = Webpack.getByKeys?.('dispatch', 'subscribe', 'register', {searchExports: true}) ?? null;
 
 let apiModule = null;
 try {
@@ -334,10 +415,10 @@ try {
 		apiModule = Webpack.getBySource('bind(null,"get")');
 	}
 	if (!apiModule && typeof Webpack.getModule === "function") {
-		apiModule = Webpack.getModule(m => m?.tn?.get);
+		apiModule = Webpack.getModule(m => m?.Bo?.get);
 	}
 } catch (e) { /* ignore */ }
-const api = apiModule?.tn ?? null;
+const api = apiModule?.Bo ?? null;
 
 let _cachedQuestsStore = null;
 function getQuestsStore() {
@@ -498,6 +579,7 @@ module.exports = class BasePlugin {
 		// Load previously failed quest IDs from storage (persist across reloads)
 		const savedFailedQuests = BdApi.Data.load(this.meta.name, 'failedClaimQuests') || [];
 		this.failedClaimQuests = new Set(savedFailedQuests); // Track quests that failed with 400 (manual claim required)
+		this._unsupportedQuests = new Set(); // Track quests with unsupported task types (like ACHIEVEMENT_IN_ACTIVITY)
 		if (savedFailedQuests.length > 0) {
 			this.log('info', `Loaded ${savedFailedQuests.length} quest(s) that require manual claim from storage`);
 		}
@@ -516,8 +598,8 @@ module.exports = class BasePlugin {
 		this.ApplicationStreamingStore = Webpack.Stores?.ApplicationStreamingStore ?? null;
 		this.ChannelStore = Webpack.Stores?.ChannelStore ?? null;
 		this.GuildChannelStore = Webpack.Stores?.GuildChannelStore ?? null;
-		this.FluxDispatcher = Webpack.getByKeys?.('dispatch', 'subscribe', 'register') ?? null;
-		this.api = Webpack.getModule?.(m => m?.tn?.get)?.tn ?? null;
+		this.FluxDispatcher = Webpack.getByKeys?.('dispatch', 'subscribe', 'register', {searchExports: true}) ?? null;
+		this.api = Webpack.getModule?.(m => m?.Bo?.get)?.Bo ?? null;
 		
 		this._boundHandleQuestChange = this.handleQuestChange.bind(this);
 		this._boundHandleNewQuest = this.handleNewQuest.bind(this);
@@ -669,6 +751,8 @@ module.exports = class BasePlugin {
 					available: this.availableQuests?.length ?? 0,
 					farmable: this.farmableQuests?.length ?? 0,
 					farming: this.farmingQuest?.size ?? 0,
+					unsupported: this._unsupportedQuests?.size ?? 0,
+					failedClaims: this.failedClaimQuests?.size ?? 0,
 				},
 				settings: {
 					autoCompleteAllQuests: this.settings.autoCompleteAllQuests,
@@ -752,8 +836,8 @@ module.exports = class BasePlugin {
 			this.ApplicationStreamingStore = Webpack.Stores?.ApplicationStreamingStore ?? null;
 			this.ChannelStore = Webpack.Stores?.ChannelStore ?? null;
 			this.GuildChannelStore = Webpack.Stores?.GuildChannelStore ?? null;
-			this.FluxDispatcher = Webpack.getByKeys?.('dispatch', 'subscribe', 'register') ?? null;
-			this.api = Webpack.getModule?.(m => m?.tn?.get)?.tn ?? null;
+			this.FluxDispatcher = Webpack.getByKeys?.('dispatch', 'subscribe', 'register', {searchExports: true}) ?? null;
+			this.api = Webpack.getModule?.(m => m?.Bo?.get)?.Bo ?? null;
 			
 			// Priority 2: Fallback to chunk resolution if Webpack.Stores doesn't work
 			if (!this.QuestsStore || !this.FluxDispatcher || !this.api) {
@@ -854,11 +938,118 @@ module.exports = class BasePlugin {
 				"ℹ️ Information": "headerInfo"
 			};
 			
+			// Helper to create styled button
+			const createButton = (text, onClick, style = 'secondary') => {
+				const btn = document.createElement('button');
+				btn.textContent = text;
+				const styles = {
+					primary: 'background: var(--brand-experiment); color: white;',
+					secondary: 'background: var(--button-secondary-background); color: var(--text-normal);',
+					danger: 'background: var(--button-danger-background); color: white;',
+					success: 'background: var(--status-positive-background); color: white;'
+				};
+				btn.style.cssText = `padding: 8px 14px; border: none; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: 500; transition: all 0.15s ease; ${styles[style] || styles.secondary}`;
+				btn.onmouseenter = () => { btn.style.filter = 'brightness(1.1)'; btn.style.transform = 'translateY(-1px)'; };
+				btn.onmouseleave = () => { btn.style.filter = 'brightness(1)'; btn.style.transform = 'translateY(0)'; };
+				btn.onclick = onClick;
+				return btn;
+			};
+			
 			const createPagedPanel = () => {
 				const container = document.createElement('div');
 				container.style.cssText = 'padding: 16px; background: var(--background-secondary); border-radius: 8px; max-width: 800px;';
 				
-				// ── Language selector at the very top ──
+				// ═══════════════════════════════════════════════════════════════
+				// STATUS DASHBOARD
+				// ═══════════════════════════════════════════════════════════════
+				const statusSection = document.createElement('div');
+				statusSection.style.cssText = 'margin-bottom: 16px; padding: 16px; background: linear-gradient(135deg, var(--background-primary) 0%, var(--background-secondary-alt) 100%); border-radius: 8px; border: 1px solid var(--background-modifier-accent);';
+				
+				const statusHeader = document.createElement('div');
+				statusHeader.style.cssText = 'display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;';
+				
+				const statusTitle = document.createElement('h3');
+				statusTitle.textContent = t('statusTitle');
+				statusTitle.style.cssText = 'margin: 0; font-size: 14px; font-weight: 600; color: var(--header-primary);';
+				
+				const statusIndicator = document.createElement('div');
+				const isActive = (self.farmingQuest?.size ?? 0) > 0;
+				statusIndicator.style.cssText = `display: flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 500; background: ${isActive ? 'var(--status-positive-background)' : 'var(--background-modifier-accent)'}; color: ${isActive ? 'white' : 'var(--text-muted)'};`;
+				statusIndicator.innerHTML = `<span style="width: 8px; height: 8px; border-radius: 50%; background: ${isActive ? '#3ba55c' : 'var(--text-muted)'}; ${isActive ? 'animation: pulse 2s infinite;' : ''}"></span> ${isActive ? t('statusActive') : t('statusIdle')}`;
+				
+				statusHeader.appendChild(statusTitle);
+				statusHeader.appendChild(statusIndicator);
+				statusSection.appendChild(statusHeader);
+				
+				// Status cards
+				const statusCards = document.createElement('div');
+				statusCards.style.cssText = 'display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;';
+				
+				const createStatusCard = (label, value, color = 'var(--text-normal)') => {
+					const card = document.createElement('div');
+					card.style.cssText = 'text-align: center; padding: 10px 8px; background: var(--background-secondary); border-radius: 6px;';
+					card.innerHTML = `
+						<div style="font-size: 20px; font-weight: 700; color: ${color}; margin-bottom: 2px;">${value}</div>
+						<div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">${label}</div>
+					`;
+					return card;
+				};
+				
+				const farmingCount = self.farmingQuest?.size ?? 0;
+				const availableCount = self.farmableQuests?.length ?? 0;
+				const completedCount = (self.availableQuests ?? []).filter(q => q?.userStatus?.completedAt).length;
+				const failedCount = self.failedClaimQuests?.size ?? 0;
+				
+				statusCards.appendChild(createStatusCard(t('statusFarming'), farmingCount, farmingCount > 0 ? 'var(--status-positive)' : 'var(--text-normal)'));
+				statusCards.appendChild(createStatusCard(t('statusAvailable'), availableCount, availableCount > 0 ? 'var(--brand-experiment)' : 'var(--text-normal)'));
+				statusCards.appendChild(createStatusCard(t('statusCompleted'), completedCount, 'var(--status-positive)'));
+				statusCards.appendChild(createStatusCard(t('statusFailed'), failedCount, failedCount > 0 ? 'var(--status-danger)' : 'var(--text-muted)'));
+				
+				statusSection.appendChild(statusCards);
+				container.appendChild(statusSection);
+				
+				// ═══════════════════════════════════════════════════════════════
+				// QUICK ACTIONS
+				// ═══════════════════════════════════════════════════════════════
+				const actionsSection = document.createElement('div');
+				actionsSection.style.cssText = 'margin-bottom: 16px; padding: 12px 16px; background: var(--background-primary); border-radius: 8px;';
+				
+				const actionsHeader = document.createElement('div');
+				actionsHeader.textContent = t('quickActions');
+				actionsHeader.style.cssText = 'font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px;';
+				actionsSection.appendChild(actionsHeader);
+				
+				const actionsRow = document.createElement('div');
+				actionsRow.style.cssText = 'display: flex; flex-wrap: wrap; gap: 8px;';
+				
+				actionsRow.appendChild(createButton(t('checkNow'), () => {
+					self.updateQuests();
+					UI.showToast('Checking for quests...', { type: 'info' });
+					setTimeout(() => container.replaceWith(createPagedPanel()), 1000);
+				}, 'primary'));
+				
+				actionsRow.appendChild(createButton(t('stopAll'), () => {
+					self.stopFarmingAll();
+					UI.showToast('Stopped all farming', { type: 'warning' });
+					setTimeout(() => container.replaceWith(createPagedPanel()), 500);
+				}, 'danger'));
+				
+				actionsRow.appendChild(createButton(t('claimAll'), async () => {
+					await self.claimAllCompletedQuests();
+					setTimeout(() => container.replaceWith(createPagedPanel()), 1000);
+				}, 'success'));
+				
+				actionsRow.appendChild(createButton(t('refreshStores'), () => {
+					self.ensureStores();
+					UI.showToast('Stores refreshed', { type: 'success' });
+				}, 'secondary'));
+				
+				actionsSection.appendChild(actionsRow);
+				container.appendChild(actionsSection);
+				
+				// ═══════════════════════════════════════════════════════════════
+				// LANGUAGE SELECTOR
+				// ═══════════════════════════════════════════════════════════════
 				const langRow = document.createElement('div');
 				langRow.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: var(--background-primary); border-radius: 6px; margin-bottom: 16px;';
 				
@@ -896,7 +1087,9 @@ module.exports = class BasePlugin {
 				langRow.appendChild(langSelect);
 				container.appendChild(langRow);
 				
-				// Page tabs
+				// ═══════════════════════════════════════════════════════════════
+				// PAGE TABS
+				// ═══════════════════════════════════════════════════════════════
 				const tabsContainer = document.createElement('div');
 				tabsContainer.style.cssText = 'display: flex; gap: 8px; margin-bottom: 20px; border-bottom: 2px solid var(--background-modifier-accent); padding-bottom: 12px;';
 				
@@ -904,7 +1097,7 @@ module.exports = class BasePlugin {
 					const tab = document.createElement('button');
 					tab.textContent = label;
 					const isActive = currentPage === page;
-					tab.style.cssText = `padding: 10px 20px; border: none; border-radius: 6px; background: ${isActive ? 'var(--brand-experiment)' : 'var(--background-tertiary)'}; color: ${isActive ? 'white' : 'var(--text-normal)'}; cursor: pointer; font-weight: ${isActive ? '600' : '400'}; transition: all 0.2s ease; font-size: 14px;`;
+					tab.style.cssText = `padding: 10px 20px; border: none; border-radius: 6px 6px 0 0; background: ${isActive ? 'var(--brand-experiment)' : 'var(--background-tertiary)'}; color: ${isActive ? 'white' : 'var(--text-normal)'}; cursor: pointer; font-weight: ${isActive ? '600' : '400'}; transition: all 0.2s ease; font-size: 14px; flex: 1;`;
 					tab.onmouseenter = () => { if (!isActive) tab.style.background = 'var(--background-modifier-hover)'; };
 					tab.onmouseleave = () => { if (!isActive) tab.style.background = 'var(--background-tertiary)'; };
 					tab.onclick = () => { currentPage = page; container.replaceWith(createPagedPanel()); };
@@ -915,9 +1108,11 @@ module.exports = class BasePlugin {
 				tabsContainer.appendChild(createTab(t('tabAdvanced'), 2));
 				container.appendChild(tabsContainer);
 				
-				// Settings container
+				// ═══════════════════════════════════════════════════════════════
+				// SETTINGS CONTAINER
+				// ═══════════════════════════════════════════════════════════════
 				const settingsContainer = document.createElement('div');
-				settingsContainer.style.cssText = 'display: flex; flex-direction: column; gap: 12px;';
+				settingsContainer.style.cssText = 'display: flex; flex-direction: column; gap: 8px;';
 				
 				const pageSettings = config.settings.filter(s => s.page === currentPage);
 				
@@ -926,14 +1121,14 @@ module.exports = class BasePlugin {
 						const header = document.createElement('h3');
 						const headerKey = headerTranslationMap[setting.text];
 						header.textContent = headerKey ? t(headerKey) : setting.text;
-						header.style.cssText = 'margin: 20px 0 10px 0; font-size: 16px; font-weight: 600; color: var(--header-primary); border-left: 4px solid var(--brand-experiment); padding-left: 12px;';
+						header.style.cssText = 'margin: 16px 0 8px 0; font-size: 14px; font-weight: 600; color: var(--header-primary); border-left: 3px solid var(--brand-experiment); padding-left: 10px;';
 						settingsContainer.appendChild(header);
 						return;
 					}
 					
 					if (setting.type === 'divider') {
 						const divider = document.createElement('div');
-						divider.style.cssText = 'height: 1px; background: var(--background-modifier-accent); margin: 12px 0;';
+						divider.style.cssText = 'height: 1px; background: var(--background-modifier-accent); margin: 8px 0;';
 						settingsContainer.appendChild(divider);
 						return;
 					}
@@ -941,26 +1136,26 @@ module.exports = class BasePlugin {
 					if (setting.type === 'info') {
 						const info = document.createElement('div');
 						info.textContent = t('infoWarning');
-						info.style.cssText = 'padding: 12px 16px; background: var(--info-warning-background); border-left: 4px solid var(--info-warning-foreground); border-radius: 4px; color: var(--text-normal); font-size: 13px; line-height: 1.5;';
+						info.style.cssText = 'padding: 10px 14px; background: var(--info-warning-background); border-left: 3px solid var(--info-warning-foreground); border-radius: 4px; color: var(--text-normal); font-size: 12px; line-height: 1.5;';
 						settingsContainer.appendChild(info);
 						return;
 					}
 					
 					const settingRow = document.createElement('div');
-					settingRow.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; background: var(--background-primary); border-radius: 6px; transition: background 0.15s ease;';
-					settingRow.onmouseenter = () => settingRow.style.background = 'var(--background-modifier-hover)';
-					settingRow.onmouseleave = () => settingRow.style.background = 'var(--background-primary)';
+					settingRow.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; background: var(--background-primary); border-radius: 6px; transition: all 0.15s ease; border: 1px solid transparent;';
+					settingRow.onmouseenter = () => { settingRow.style.background = 'var(--background-modifier-hover)'; settingRow.style.borderColor = 'var(--background-modifier-accent)'; };
+					settingRow.onmouseleave = () => { settingRow.style.background = 'var(--background-primary)'; settingRow.style.borderColor = 'transparent'; };
 					
 					const labelDiv = document.createElement('div');
-					labelDiv.style.cssText = 'flex: 1;';
+					labelDiv.style.cssText = 'flex: 1; min-width: 0;';
 					
 					const label = document.createElement('div');
 					label.textContent = setting.id ? t(setting.id) : setting.name;
-					label.style.cssText = 'font-weight: 500; color: var(--header-primary); font-size: 15px; margin-bottom: 4px;';
+					label.style.cssText = 'font-weight: 500; color: var(--header-primary); font-size: 14px; margin-bottom: 2px;';
 					
 					const note = document.createElement('div');
 					note.textContent = setting.id ? t(setting.id + 'Note') : setting.note;
-					note.style.cssText = 'font-size: 13px; color: var(--text-muted); line-height: 1.4;';
+					note.style.cssText = 'font-size: 12px; color: var(--text-muted); line-height: 1.3;';
 					
 					labelDiv.appendChild(label);
 					labelDiv.appendChild(note);
@@ -968,7 +1163,7 @@ module.exports = class BasePlugin {
 					
 					if (setting.type === 'switch') {
 						const switchContainer = document.createElement('div');
-						switchContainer.style.cssText = 'position: relative; width: 48px; height: 26px; flex-shrink: 0;';
+						switchContainer.style.cssText = 'position: relative; width: 44px; height: 24px; flex-shrink: 0; margin-left: 12px;';
 						
 						const switchInput = document.createElement('input');
 						switchInput.type = 'checkbox';
@@ -976,19 +1171,19 @@ module.exports = class BasePlugin {
 						switchInput.style.cssText = 'opacity: 0; width: 0; height: 0; position: absolute;';
 						
 						const slider = document.createElement('span');
-						slider.style.cssText = `position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: ${switchInput.checked ? 'var(--brand-experiment)' : 'var(--background-modifier-accent)'}; border-radius: 34px; transition: 0.3s;`;
+						slider.style.cssText = `position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: ${switchInput.checked ? 'var(--brand-experiment)' : 'var(--background-modifier-accent)'}; border-radius: 24px; transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);`;
 						
 						const knob = document.createElement('span');
-						knob.style.cssText = `position: absolute; content: ''; height: 20px; width: 20px; left: ${switchInput.checked ? '25px' : '3px'}; bottom: 3px; background: white; border-radius: 50%; transition: 0.3s; box-shadow: 0 2px 4px rgba(0,0,0,0.2);`;
+						knob.style.cssText = `position: absolute; height: 18px; width: 18px; left: ${switchInput.checked ? '23px' : '3px'}; bottom: 3px; background: white; border-radius: 50%; transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 1px 3px rgba(0,0,0,0.3);`;
 						
 						slider.appendChild(knob);
 						switchContainer.appendChild(switchInput);
 						switchContainer.appendChild(slider);
 						
-						switchInput.onchange = () => {
+						const updateSwitch = () => {
 							self.settings[setting.id] = switchInput.checked;
 							slider.style.background = switchInput.checked ? 'var(--brand-experiment)' : 'var(--background-modifier-accent)';
-							knob.style.left = switchInput.checked ? '25px' : '3px';
+							knob.style.left = switchInput.checked ? '23px' : '3px';
 							if (setting.id === 'autoStartVideoQuests') {
 								if (switchInput.checked) self.startAutoStart(); else self.stopAutoStart();
 							} else if (setting.id === 'checkForNewQuests') {
@@ -996,26 +1191,54 @@ module.exports = class BasePlugin {
 							}
 						};
 						
-						switchContainer.onclick = () => { switchInput.checked = !switchInput.checked; switchInput.onchange(); };
+						switchInput.onchange = updateSwitch;
+						switchContainer.onclick = () => { switchInput.checked = !switchInput.checked; updateSwitch(); };
 						settingRow.appendChild(switchContainer);
 					} else if (setting.type === 'number') {
+						// Enhanced number input with +/- stepper buttons
+						const numberContainer = document.createElement('div');
+						numberContainer.style.cssText = 'display: flex; align-items: center; gap: 0; flex-shrink: 0; margin-left: 12px; border-radius: 6px; overflow: hidden; border: 1px solid var(--background-tertiary);';
+						
+						const minusBtn = document.createElement('button');
+						minusBtn.textContent = '−';
+						minusBtn.style.cssText = 'width: 32px; height: 32px; border: none; background: var(--background-tertiary); color: var(--text-normal); cursor: pointer; font-size: 16px; font-weight: 600; transition: background 0.15s;';
+						minusBtn.onmouseenter = () => minusBtn.style.background = 'var(--background-modifier-hover)';
+						minusBtn.onmouseleave = () => minusBtn.style.background = 'var(--background-tertiary)';
+						
 						const numberInput = document.createElement('input');
 						numberInput.type = 'number';
 						numberInput.value = self.settings[setting.id] ?? setting.value;
 						numberInput.min = setting.min;
 						numberInput.max = setting.max;
 						numberInput.step = setting.step;
-						numberInput.style.cssText = 'width: 80px; padding: 8px 12px; background: var(--input-background); border: 1px solid var(--background-tertiary); border-radius: 4px; color: var(--text-normal); font-size: 14px; text-align: center;';
+						numberInput.style.cssText = 'width: 50px; height: 32px; padding: 0; background: var(--input-background); border: none; border-left: 1px solid var(--background-tertiary); border-right: 1px solid var(--background-tertiary); color: var(--text-normal); font-size: 14px; text-align: center; -moz-appearance: textfield;';
 						
-						numberInput.oninput = () => {
-							const val = Number(numberInput.value);
-							if (!isNaN(val)) {
-								self.settings[setting.id] = val;
-								if (setting.id === 'checkForNewQuests') self.startInterval();
-							}
+						const plusBtn = document.createElement('button');
+						plusBtn.textContent = '+';
+						plusBtn.style.cssText = 'width: 32px; height: 32px; border: none; background: var(--background-tertiary); color: var(--text-normal); cursor: pointer; font-size: 16px; font-weight: 600; transition: background 0.15s;';
+						plusBtn.onmouseenter = () => plusBtn.style.background = 'var(--background-modifier-hover)';
+						plusBtn.onmouseleave = () => plusBtn.style.background = 'var(--background-tertiary)';
+						
+						const updateValue = (newVal) => {
+							const min = Number(setting.min);
+							const max = Number(setting.max);
+							newVal = Math.max(min, Math.min(max, newVal));
+							numberInput.value = newVal;
+							self.settings[setting.id] = newVal;
+							if (setting.id === 'checkForNewQuests') self.startInterval();
 						};
 						
-						settingRow.appendChild(numberInput);
+						minusBtn.onclick = () => updateValue(Number(numberInput.value) - (setting.step || 1));
+						plusBtn.onclick = () => updateValue(Number(numberInput.value) + (setting.step || 1));
+						numberInput.oninput = () => {
+							const val = Number(numberInput.value);
+							if (!isNaN(val)) updateValue(val);
+						};
+						
+						numberContainer.appendChild(minusBtn);
+						numberContainer.appendChild(numberInput);
+						numberContainer.appendChild(plusBtn);
+						settingRow.appendChild(numberContainer);
 					}
 					
 					settingsContainer.appendChild(settingRow);
@@ -1023,24 +1246,68 @@ module.exports = class BasePlugin {
 				
 				container.appendChild(settingsContainer);
 				
-				// Footer
+				// ═══════════════════════════════════════════════════════════════
+				// FOOTER
+				// ═══════════════════════════════════════════════════════════════
 				const footer = document.createElement('div');
-				footer.style.cssText = 'margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--background-modifier-accent); display: flex; justify-content: space-between; align-items: center;';
+				footer.style.cssText = 'margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--background-modifier-accent); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;';
+				
+				const footerLeft = document.createElement('div');
+				footerLeft.style.cssText = 'display: flex; align-items: center; gap: 8px;';
 				
 				const version = document.createElement('span');
 				version.textContent = `FarmQuests v${config.info.version}`;
 				version.style.cssText = 'font-size: 12px; color: var(--text-muted);';
+				footerLeft.appendChild(version);
 				
-				const debugBtn = document.createElement('button');
-				debugBtn.textContent = t('copyDebugInfo');
-				debugBtn.style.cssText = 'padding: 8px 16px; background: var(--button-secondary-background); color: var(--text-normal); border: none; border-radius: 4px; cursor: pointer; font-size: 13px; transition: background 0.15s;';
-				debugBtn.onmouseenter = () => debugBtn.style.background = 'var(--button-secondary-background-hover)';
-				debugBtn.onmouseleave = () => debugBtn.style.background = 'var(--button-secondary-background)';
-				debugBtn.onclick = () => self.copyDebugInfo();
+				const footerRight = document.createElement('div');
+				footerRight.style.cssText = 'display: flex; gap: 8px;';
 				
-				footer.appendChild(version);
-				footer.appendChild(debugBtn);
+				// Reset defaults button
+				const resetBtn = createButton(t('resetDefaults'), () => {
+					if (confirm(t('resetConfirm'))) {
+						const defaults = {
+							acceptQuestsAutomatically: true,
+							autoCompleteAllQuests: true,
+							autoClaimRewards: true,
+							autoStartVideoQuests: true,
+							retryFailedQuests: true,
+							verifyQuestCompletion: true,
+							questNotifications: true,
+							suppressQuestProgressPill: false,
+							enableVerboseLogging: false,
+							checkForNewQuests: 5,
+							concurrentFarms: 3,
+							delayBetweenFarms: 2,
+							maxFallbackAttempts: 30,
+							claimRetryAttempts: 3
+						};
+						for (const [key, value] of Object.entries(defaults)) {
+							self.settings[key] = value;
+						}
+						UI.showToast(t('settingsReset'), { type: 'success' });
+						container.replaceWith(createPagedPanel());
+					}
+				}, 'secondary');
+				
+				const debugBtn = createButton(t('copyDebugInfo'), () => self.copyDebugInfo(), 'secondary');
+				
+				footerRight.appendChild(resetBtn);
+				footerRight.appendChild(debugBtn);
+				
+				footer.appendChild(footerLeft);
+				footer.appendChild(footerRight);
 				container.appendChild(footer);
+				
+				// Add CSS animation for pulse
+				const style = document.createElement('style');
+				style.textContent = `
+					@keyframes pulse {
+						0%, 100% { opacity: 1; }
+						50% { opacity: 0.5; }
+					}
+				`;
+				container.appendChild(style);
 				
 				return container;
 			};
@@ -1262,6 +1529,7 @@ module.exports = class BasePlugin {
 		this.fakeGames.clear();
 		this.fakeApplications.clear();
 		this.failedClaimQuests.clear();
+		this._unsupportedQuests?.clear();
 		
 		// Cleanup all registered intervals
 		if (this._cleanupRegistry?.intervals) {
@@ -1632,7 +1900,7 @@ module.exports = class BasePlugin {
 			}
 
 			// Get FRESH references like AutoQuestComplete does inside runQuest()
-			const apiInstance = Webpack.getModule?.(m => m?.tn?.get)?.tn ?? this.api ?? api;
+			const apiInstance = Webpack.getModule?.(m => m?.Bo?.get)?.Bo ?? this.api ?? api;
 			if (!apiInstance) {
 				this.log('error', 'API not available for video quest completion');
 				return;
@@ -2038,8 +2306,8 @@ module.exports = class BasePlugin {
 			// This is the KEY fix - AutoQuestComplete gets these fresh every time, not from cached this.* values
 			const ApplicationStreamingStore = Webpack.Stores?.ApplicationStreamingStore ?? this.ApplicationStreamingStore;
 			const RunningGameStore = Webpack.Stores?.RunningGameStore ?? this.RunningGameStore;
-			const FluxDispatcher = Webpack.getByKeys?.('dispatch', 'subscribe', 'register') ?? this.FluxDispatcher;
-			const api = Webpack.getModule?.(m => m?.tn?.get)?.tn ?? this.api;
+			const FluxDispatcher = Webpack.getByKeys?.('dispatch', 'subscribe', 'register', {searchExports: true}) ?? this.FluxDispatcher;
+			const api = Webpack.getModule?.(m => m?.Bo?.get)?.Bo ?? this.api;
 			
 			let isApp = typeof DiscordNative !== "undefined";
 			if (!quest) {
@@ -2061,7 +2329,7 @@ module.exports = class BasePlugin {
 				this.farmingQuest.set(quest.id, false);
 				return;
 			}
-			const taskName = ["WATCH_VIDEO", "PLAY_ON_DESKTOP", "STREAM_ON_DESKTOP", "PLAY_ACTIVITY", "WATCH_VIDEO_ON_MOBILE"].find(x => taskConfig.tasks[x] != null);
+			const taskName = ["WATCH_VIDEO", "PLAY_ON_DESKTOP", "STREAM_ON_DESKTOP", "PLAY_ACTIVITY", "WATCH_VIDEO_ON_MOBILE", "ACHIEVEMENT_IN_ACTIVITY"].find(x => taskConfig.tasks[x] != null);
 			if (!taskName) {
 				console.error("FarmQuests: could not determine task type for quest", quest?.id);
 				this.farmingQuest.set(quest.id, false);
@@ -2092,9 +2360,9 @@ module.exports = class BasePlugin {
 					if (!api) { console.error("FarmQuests: missing API for PLAY_ON_DESKTOP"); break; }
 					api.get({ url: `/applications/public?application_ids=${applicationId}` }).then(res => {
 							const appData = res.body[0];
-							const exeEntry = (appData.executables || []).find(x => x.os === "win32") || (appData.executables || [])[0];
-							const exeName = (exeEntry?.name ?? "app.exe").replace(">", "");
-
+						// Fixed exe name extraction (Feb 2026) - use appData.name as fallback with sanitization
+						const exeName = appData.executables?.find(x => x.os === "win32")?.name?.replace(">","") ??
+							appData.name.replace(/[\/\\:*?"<>|]/g, "");
 							const fakeGame = {
 								cmdLine: `C:\\Program Files\\${appData.name}\\${exeName}`,
 								exeName,
@@ -2289,6 +2557,34 @@ module.exports = class BasePlugin {
 						}
 					}
 					playActivity();
+					break;
+
+				case "ACHIEVEMENT_IN_ACTIVITY":
+					// Server-side quest that cannot be spoofed - warn user
+					if (this._unsupportedQuests.has(applicationId)) {
+						this.farmingQuest.set(quest.id, false);
+						return;
+					}
+					this._unsupportedQuests.add(applicationId);
+					
+					UI.showConfirmationModal(
+						t('unsupportedQuestTitle'),
+						[
+							t('unsupportedQuestContent', { name: questName, taskType: taskName }),
+							t('unsupportedQuestNote')
+						],
+						{
+							confirmText: t('goToQuest'),
+							onConfirm: () => {
+								try {
+									open(`/quests/${quest.id}`);
+								} catch (e) {
+									this.log('warn', 'Failed to open quest page', e.message);
+								}
+							}
+						}
+					);
+					this.farmingQuest.set(quest.id, false);
 					break;
 
 				default:
