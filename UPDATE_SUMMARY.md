@@ -262,7 +262,59 @@ If any setting gets corrupted, these defaults will be restored:
 
 ---
 
-## 📖 Full Documentation
+## � Full Changelog
+
+### v1.8.0 (Feb 2026)
+- **Stuck Detection & Auto-Recovery:**
+  - Automatic stuck quest detection (30s interval monitoring)
+  - Auto-recovery: refreshes stores and restarts farming
+  - Configurable stuck timeout (default: 3 minutes)
+  - New status indicator showing stuck quests count
+- **Unsupported Quest Handling:**
+  - Added ACHIEVEMENT_IN_ACTIVITY quest type detection
+  - User-friendly modal for unsupported server-side quests
+- **Discord API Updates:**
+  - Fixed API module resolution (.tn → .Bo export pattern)
+  - Fixed FluxDispatcher lookup with searchExports
+  - Fixed exe name extraction for PLAY_ON_DESKTOP quests
+  - Ported fixes from AutoQuestComplete v0.5.6
+- Full localization for stuck detection (EN/KM/ZH)
+
+### v1.6.2 (Feb 2026)
+- Multi-language support: English, Khmer (ខ្មែរ), Chinese (中文)
+- Language dropdown selector at the top of settings
+- All labels, notes, headers, notifications translated
+- Language preference persists across reloads
+
+### v1.6.1 (Jan 2026)
+- Fixed syntax error in API module resolution
+- Fixed version comparison logic in update checker
+- Fixed memory leaks - intervals/subscriptions cleaned up
+- Added null-safety guards in webpack module finder
+- Added 'Copy Debug Info' feature
+- Added cleanup registry for intervals/timeouts/subscriptions
+
+### v1.6.0 (Jan 2026)
+- Updated webpack selectors for Discord's January 2026 update
+- Fixed 'Cannot read properties of undefined (reading exports)'
+- More robust store resolution with multiple fallback patterns
+
+### v1.0.5
+- Added maxFallbackAttempts setting
+- Added concurrentFarms setting for parallel quest farming
+- Added enableVerboseLogging for detailed debug output
+- Enhanced quest detection robustness
+
+### v1.0.0 - Initial Release
+- Auto-farm multiple quests simultaneously
+- Support for WATCH_VIDEO, PLAY_ON_DESKTOP, STREAM_ON_DESKTOP, PLAY_ACTIVITY
+- Smart quest detection and automatic farming
+- Progress tracking via heartbeat events
+- Fallback mechanisms for reliable completion
+
+---
+
+## �📖 Full Documentation
 
 See `FarmQuests/README.md` for:
 - Complete feature list

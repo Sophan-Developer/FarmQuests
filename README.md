@@ -2,7 +2,7 @@
 
 A BetterDiscord plugin that automatically farms multiple Discord quests in the background simultaneously.
 
-**Version:** 1.6.1  
+**Version:** 1.8.0  
 **Author:** Sophan-Developer  
 **Based on:** [aamiaa's original script](https://gist.github.com/aamiaa/204cd9d42013ded9faf646fae7f89fbb)
 
@@ -15,9 +15,11 @@ A BetterDiscord plugin that automatically farms multiple Discord quests in the b
   - `STREAM_ON_DESKTOP` – Spoofs stream activity
   - `PLAY_ACTIVITY` – Farms activity quests in voice channels
 - 🔄 **Smart quest detection** – Automatically detects and starts new quests
-- ⚙️ **Highly configurable** – Fine-tune farming behavior with 13+ settings
+- ⚙️ **Highly configurable** – Fine-tune farming behavior with 15+ settings
 - 📊 **Progress tracking** – Monitor quest completion progress
 - 🛡️ **Fallback mechanisms** – Multiple layers of task completion to ensure success
+- 🔍 **Stuck detection** – Automatically detects and recovers quests that stop progressing
+- ⚠️ **Unsupported quest alerts** – User-friendly notifications for server-side quests that require manual completion
 - 🔇 **Verbose logging** – Optional debug output for troubleshooting
 - 📋 **Copy Debug Info** – One-click copy of debug info for troubleshooting
 - 🧹 **Memory safe** – Proper cleanup of intervals/subscriptions on stop
@@ -104,6 +106,8 @@ All setting labels, descriptions, tab names, headers, notifications, and toast m
 | **Retry Failed Quests** | Toggle | ON | Automatically retry quests that fail to complete |
 | **Verify Quest Completion** | Toggle | ON | Double-check that quests are properly completed and claimed |
 | **Claim Retry Attempts** | Number | 3 | Number of times to retry claiming rewards if it fails (1-10) |
+| **Stuck Detection** | Toggle | ON | Automatically detect and recover quests that stop progressing |
+| **Stuck Timeout** | Number | 3 | Consider quest stuck if no progress for this many minutes (1-10) |
 
 #### Notifications & UI
 | Setting | Type | Default | Description |
@@ -225,36 +229,98 @@ A: Yes! Adjust the **Concurrent farms** setting. Default is 3, meaning up to 3 q
 
 ## Changelog
 
-**v1.6.2** (Feb 2026)
-- Added multi-language support: English, Khmer (ខ្មែរ), and Chinese (中文)
-- Language dropdown selector at the top of the settings panel
-- All settings labels, notes, headers, tab names, notifications, and toasts are fully translated
-- Language preference persists across reloads via config.json
+### v1.8.0 (Feb 2026)
 
-**v1.6.1** (Jan 2026)
-- Fixed syntax error in API module resolution
+#### ✨ New Features
+- **Stuck Detection & Auto-Recovery:**
+  - Added automatic stuck quest detection - monitors progress every 30 seconds
+  - Auto-recovery for stuck quests - refreshes stores and restarts farming
+  - Configurable stuck timeout (default: 3 minutes)
+  - New status indicator showing stuck quests count
+  - Full localization for stuck detection (EN/KM/ZH)
+
+- **Unsupported Quest Handling:**
+  - Added `ACHIEVEMENT_IN_ACTIVITY` quest type detection
+  - New user-friendly modal for unsupported server-side quests
+  - Tracks unsupported quests to avoid repeated alerts
+  - Full localization for unsupported quest messages (EN/KM/ZH)
+
+#### 🐛 Bug Fixes
+- **Discord API Updates:**
+  - Fixed API module resolution - updated from `.tn` to `.Bo` export pattern
+  - Fixed FluxDispatcher lookup with `searchExports` option
+  - Fixed exe name extraction for `PLAY_ON_DESKTOP` quests
+  - Ported fixes from AutoQuestComplete v0.5.6
+
+---
+
+### v1.6.2 (Feb 2026)
+
+#### ✨ New Features
+- **Multi-Language Support:**
+  - Added full localization: English, Khmer (ខ្មែរ), and Chinese (中文)
+  - Language dropdown selector at the top of the settings panel
+  - All settings labels, notes, headers, tabs, notifications and toasts are translated
+  - Language preference persists across reloads via `config.json`
+
+---
+
+### v1.6.1 (Jan 2026)
+
+#### 🐛 Bug Fixes
+- Fixed syntax error in API module resolution (line 87)
 - Fixed version comparison logic in update checker
 - Fixed memory leaks - intervals and Flux subscriptions now properly cleaned up
 - Added null-safety guards in webpack module finder
+
+#### ✨ New Features
 - Added 'Copy Debug Info' feature for easier troubleshooting
 - Added user-friendly error notices with debug option
 - Added cleanup registry to track all intervals/timeouts/subscriptions
-- Better error handling when Discord modules are missing
-- Improved stop() cleanup to prevent resource leaks
 
-**v1.6.0** (Jan 2026)
+#### 🔧 Improvements
+- Better error handling when Discord modules are missing
+- Improved `stop()` cleanup to prevent resource leaks
+- More robust store resolution with better fallback patterns
+
+---
+
+### v1.6.0 (Jan 2026)
+
+#### 🐛 Bug Fixes
 - Updated webpack module selectors for Discord's January 2026 update
 - Fixed 'Cannot read properties of undefined (reading exports)' error
 - Updated ApplicationStreamingStore, RunningGameStore, QuestsStore selectors
+
+#### 🔧 Improvements
 - More robust store resolution with multiple fallback patterns
 
-**v1.0.5**
-- Added maxFallbackAttempts setting
-- Added concurrentFarms setting for parallel quest farming
-- Added enableVerboseLogging for detailed debug output
+---
+
+### v1.0.5
+
+#### ✨ New Features
+- Added `maxFallbackAttempts` setting
+- Added `concurrentFarms` setting for parallel quest farming
+- Added `enableVerboseLogging` for detailed debug output
 - Added UI button visibility settings
+
+#### 🔧 Improvements
 - Improved fallback completion logic
 - Enhanced quest detection robustness
+
+---
+
+### v1.0.0
+
+#### 🚀 Initial Release
+- Auto-farm multiple quests simultaneously
+- Support for all quest types: `WATCH_VIDEO`, `PLAY_ON_DESKTOP`, `STREAM_ON_DESKTOP`, `PLAY_ACTIVITY`
+- Smart quest detection and automatic farming
+- Progress tracking via heartbeat events
+- Fallback mechanisms for reliable completion
+- Configurable settings panel
+- Based on [aamiaa's original script](https://gist.github.com/aamiaa/204cd9d42013ded9faf646fae7f89fbb)
 
 ---
 

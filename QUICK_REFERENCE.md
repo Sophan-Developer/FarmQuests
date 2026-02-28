@@ -243,4 +243,37 @@ When a stuck quest is detected:
 
 ---
 
+## 📜 Full Changelog
+
+### v1.8.0 (Feb 2026)
+- ✨ Stuck detection & auto-recovery
+- ✨ Unsupported quest handling (ACHIEVEMENT_IN_ACTIVITY)
+- 🐛 Fixed API module resolution (.tn → .Bo)
+- 🐛 Fixed FluxDispatcher lookup
+- 🐛 Fixed exe name extraction for PLAY_ON_DESKTOP
+
+### v1.6.2 (Feb 2026)
+- ✨ Multi-language support (EN/KM/ZH)
+- ✨ Language selector in settings
+
+### v1.6.1 (Jan 2026)
+- 🐛 Fixed syntax error in API module
+- 🐛 Fixed version comparison logic
+- 🐛 Fixed memory leaks
+- ✨ Copy Debug Info feature
+
+### v1.6.0 (Jan 2026)
+- 🐛 Updated webpack selectors for Discord Jan 2026
+- 🔧 More robust store resolution
+
+### v1.0.5
+- ✨ maxFallbackAttempts setting
+- ✨ concurrentFarms setting
+- ✨ enableVerboseLogging setting
+
+### v1.0.0
+- 🚀 Initial release
+
+---
+
 **Version:** 1.8.0 | **Last Updated:** February 2026 | **Status:** Production Ready ✅

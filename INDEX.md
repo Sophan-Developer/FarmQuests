@@ -315,4 +315,17 @@ Pick a document above and start reading. If you have any issues, check QUICK_REF
 
 ---
 
+## 📜 Version History
+
+| Version | Date | Highlights |
+|---------|------|------------|
+| **1.8.0** | Feb 2026 | Stuck detection, auto-recovery, unsupported quest handling |
+| **1.6.2** | Feb 2026 | Multi-language support (EN/KM/ZH) |
+| **1.6.1** | Jan 2026 | Bug fixes, memory leak fixes, Copy Debug Info |
+| **1.6.0** | Jan 2026 | Discord Jan 2026 webpack updates |
+| **1.0.5** | - | Settings additions (concurrent farms, fallback attempts) |
+| **1.0.0** | - | Initial release |
+
+---
+
 **Index Version:** 1.8.0 | **Plugin Version:** 1.8.0 | **Status:** ✅ Complete
