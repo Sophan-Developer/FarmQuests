@@ -1,7 +1,7 @@
 /**
  * @name FarmQuests
  * @description A plugin that farms you multiple discord quests in background simultaneously.
- * @version 1.8.0
+ * @version 1.9.0
  * @author Sophan-Developer
  * @authorLink https://github.com/Sophan-Developer
  * @website https://github.com/Sophan-Developer/FarmQuests
@@ -346,10 +346,16 @@ function t(key, params = {}) {
 const config = {
     info: {
         name: 'FarmQuests',
-        version: '1.8.0',
+        version: '1.9.0',
         github_raw: 'https://raw.githubusercontent.com/Sophan-Developer/FarmQuests/main/FarmQuests.plugin.js'
     },
     changelog: [
+        { title: "AutoQuestComplete v0.6.0 Port (Mar 2026)", type: "fixed", items: [
+            "Prefer taskConfigV2 over taskConfig to match Discord's latest quest API",
+            "Added error reporting modal with pre-filled GitHub issue for quest failures",
+            "Improved stop() cleanup - now clears active quest state variables",
+            "Ported fixes from AutoQuestComplete v0.6.0"
+        ]},
         { title: "Stuck Detection & Auto-Recovery (Feb 2026)", type: "added", items: [
             "Added automatic stuck quest detection - monitors progress every 30 seconds",
             "Auto-recovery for stuck quests - refreshes stores and restarts farming",
@@ -625,6 +631,8 @@ module.exports = class BasePlugin {
 		this._questProgressTracker = new Map(); // Track { questId -> { lastProgress, lastUpdateTime, startTime } }
 		this._stuckQuests = new Set(); // Track quests detected as stuck
 		this._stuckCheckInterval = null; // Interval for stuck detection
+		this._questErrorTracker = new Map(); // Track { questId -> { consecutiveErrors, lastErrorTime, totalErrors } }
+		this._questRecoveryAttempts = new Map(); // Track { questId -> recoveryCount } to limit retries
 		if (savedFailedQuests.length > 0) {
 			this.log('info', `Loaded ${savedFailedQuests.length} quest(s) that require manual claim from storage`);
 		}
@@ -1530,25 +1538,31 @@ module.exports = class BasePlugin {
 
 		// Setup patchers for running games and streaming
 		if (this.RunningGameStore) {
+			// Patch getRunningGames to return fake games (like the gist does)
+			// When fake games exist, return ONLY fake games so Discord thinks the quest game is running
 			Patcher.instead(this.meta.name, this.RunningGameStore, "getRunningGames", (thisObject, args, originalFunction) => {
 				if (this.fakeGames.size > 0) {
 					return Array.from(this.fakeGames.values());
 				}
-				return originalFunction?.apply(thisObject, args);
+				return originalFunction?.apply(thisObject, args) ?? [];
 			});
+			// Patch getGameForPID to find fake games by PID
 			Patcher.instead(this.meta.name, this.RunningGameStore, "getGameForPID", (thisObject, args, originalFunction) => {
 				if (this.fakeGames.size > 0) {
-					return Array.from(this.fakeGames.values()).find(game => game.pid === args?.[0]);
+					const found = Array.from(this.fakeGames.values()).find(game => game.pid === args?.[0]);
+					if (found) return found;
 				}
 				return originalFunction?.apply(thisObject, args);
 			});
 		}
 
 		if (this.ApplicationStreamingStore) {
+			// Patch getStreamerActiveStreamMetadata to return fake stream data (like the gist does)
 			Patcher.instead(this.meta.name, this.ApplicationStreamingStore, "getStreamerActiveStreamMetadata", (thisObject, args, originalFunction) => {
 				if (this.fakeApplications.size > 0) {
+					// Return the first fake app's metadata (only one stream at a time)
 					const arr = Array.from(this.fakeApplications.values());
-					return arr.length ? arr[0] : null;
+					return arr.length ? arr[0] : originalFunction?.apply(thisObject, args);
 				}
 				return originalFunction?.apply(thisObject, args);
 			});
@@ -1586,6 +1600,10 @@ module.exports = class BasePlugin {
 		this._unsupportedQuests?.clear();
 		this._questProgressTracker?.clear();
 		this._stuckQuests?.clear();
+		this._questErrorTracker?.clear();
+		this._questRecoveryAttempts?.clear();
+		this._activeQuestId = null;
+		this._activeQuestName = null;
 		
 		// Stop stuck detection interval
 		if (this._stuckCheckInterval) {
@@ -1705,11 +1723,11 @@ module.exports = class BasePlugin {
 		if (!this.settings.stuckDetection) return;
 		
 		this.stopStuckDetection();
-		// Check for stuck quests every 30 seconds
+		// Check for stuck quests every 20 seconds (more responsive)
 		this._stuckCheckInterval = setInterval(() => {
 			this.checkForStuckQuests();
-		}, 30 * 1000);
-		this.log('debug', 'Stuck detection started');
+		}, 20 * 1000);
+		this.log('debug', 'Stuck detection started (20s interval)');
 	}
 	
 	stopStuckDetection() {
@@ -1742,12 +1760,38 @@ module.exports = class BasePlugin {
 			});
 			// Remove from stuck list if it was there
 			this._stuckQuests.delete(questId);
+			// Reset error count on successful progress
+			this._questErrorTracker.delete(questId);
 		}
 		// If progress didn't increase, don't update lastUpdateTime (to detect stuck)
 	}
 	
 	/**
-	 * Check all farming quests for stuck status
+	 * Track a heartbeat/API error for a quest (call on 404, 400, network errors)
+	 */
+	trackQuestError(questId, errorType = 'unknown', statusCode = null) {
+		const now = Date.now();
+		const existing = this._questErrorTracker.get(questId) || { consecutiveErrors: 0, lastErrorTime: 0, totalErrors: 0, lastStatusCode: null };
+		existing.consecutiveErrors++;
+		existing.totalErrors++;
+		existing.lastErrorTime = now;
+		existing.lastStatusCode = statusCode;
+		existing.lastErrorType = errorType;
+		this._questErrorTracker.set(questId, existing);
+		
+		this.log('debug', `Quest ${questId} error tracked: ${errorType} (${statusCode}), consecutive: ${existing.consecutiveErrors}, total: ${existing.totalErrors}`);
+		
+		// If too many consecutive errors (5+), trigger immediate stuck recovery
+		const errorThreshold = 5;
+		if (existing.consecutiveErrors >= errorThreshold && !this._stuckQuests.has(questId)) {
+			this.log('warn', `Quest ${questId} has ${existing.consecutiveErrors} consecutive errors - triggering auto-recovery`);
+			this._stuckQuests.add(questId);
+			this.handleStuckQuest(questId);
+		}
+	}
+	
+	/**
+	 * Check all farming quests for stuck status (progress stall OR error-stuck)
 	 */
 	checkForStuckQuests() {
 		if (!this.settings.stuckDetection) return;
@@ -1758,16 +1802,26 @@ module.exports = class BasePlugin {
 		for (const [questId, isActive] of this.farmingQuest) {
 			if (!isActive) continue; // Skip quests that are finishing
 			
+			// Check 1: Progress stall detection
 			const tracker = this._questProgressTracker.get(questId);
-			if (!tracker) continue; // No tracking data yet
-			
-			const timeSinceLastProgress = now - tracker.lastUpdateTime;
-			
-			if (timeSinceLastProgress > stuckTimeoutMs) {
-				// Quest appears stuck!
-				if (!this._stuckQuests.has(questId)) {
+			if (tracker) {
+				const timeSinceLastProgress = now - tracker.lastUpdateTime;
+				
+				if (timeSinceLastProgress > stuckTimeoutMs && !this._stuckQuests.has(questId)) {
 					this._stuckQuests.add(questId);
 					this.log('warn', `Quest ${questId} appears stuck - no progress for ${Math.round(timeSinceLastProgress / 1000)}s`);
+					this.handleStuckQuest(questId);
+					continue;
+				}
+			}
+			
+			// Check 2: Error-stuck detection (repeated API failures)
+			const errorTracker = this._questErrorTracker.get(questId);
+			if (errorTracker && !this._stuckQuests.has(questId)) {
+				const recentErrors = (now - errorTracker.lastErrorTime) < 60000; // Errors in last 60s
+				if (recentErrors && errorTracker.consecutiveErrors >= 3) {
+					this._stuckQuests.add(questId);
+					this.log('warn', `Quest ${questId} error-stuck - ${errorTracker.consecutiveErrors} consecutive errors (last: ${errorTracker.lastStatusCode})`);
 					this.handleStuckQuest(questId);
 				}
 			}
@@ -1775,61 +1829,123 @@ module.exports = class BasePlugin {
 	}
 	
 	/**
-	 * Handle a stuck quest - attempt recovery
+	 * Handle a stuck quest - attempt recovery with exponential backoff
 	 */
 	async handleStuckQuest(questId) {
 		try {
+			// Track recovery attempts to avoid infinite loops
+			const recoveryCount = (this._questRecoveryAttempts.get(questId) || 0) + 1;
+			this._questRecoveryAttempts.set(questId, recoveryCount);
+			
+			const maxRecoveries = 5;
+			if (recoveryCount > maxRecoveries) {
+				const quest = this.availableQuests?.find(q => q.id === questId);
+				const questName = quest?.config?.messages?.questName ?? `Quest ${questId}`;
+				this.log('warn', `Quest ${questName} exceeded max recovery attempts (${maxRecoveries}). Stopping.`);
+				UI.showToast(t('stuckRecoveryFailed', { name: questName }), { type: 'error' });
+				this.farmingQuest.set(questId, false);
+				this.farmingQuest.delete(questId);
+				return;
+			}
+			
 			// Find the quest object
 			const quest = this.availableQuests?.find(q => q.id === questId);
 			const questName = quest?.config?.messages?.questName ?? `Quest ${questId}`;
 			
 			// Notify user
 			if (this.settings.questNotifications) {
-				UI.showToast(t('stuckDetectedContent', { name: questName }), { type: 'warning' });
+				UI.showToast(t('stuckDetectedContent', { name: questName }) + ` (attempt ${recoveryCount}/${maxRecoveries})`, { type: 'warning' });
 			}
 			
-			this.log('info', `Attempting recovery for stuck quest: ${questName}`);
+			this.log('info', `Attempting recovery #${recoveryCount} for stuck quest: ${questName}`);
 			
-			// Step 1: Stop the stuck quest
+			// Step 1: Stop the stuck quest and clean up all resources
 			this.farmingQuest.set(questId, false);
 			
-			// Step 2: Clean up fake games/streams for this quest
+			// Step 2: Clean up fake games/streams and dispatch removal
+			const hadFakeGame = this.fakeGames.has(questId);
+			const fakeGame = this.fakeGames.get(questId);
 			this.fakeGames.delete(questId);
 			this.fakeApplications.delete(questId);
 			
-			// Step 3: Clear progress tracker
+			// Dispatch game removal to clean up Discord's state
+			if (hadFakeGame && fakeGame) {
+				try {
+					const FluxDispatcher = this.FluxDispatcher ?? Webpack.getByKeys?.('dispatch', 'subscribe', 'register', {searchExports: true});
+					// Use remainingFakes (not patched getRunningGames) for proper multi-quest cleanup
+					const remainingFakes = Array.from(this.fakeGames.values());
+					FluxDispatcher?.dispatch({ type: "RUNNING_GAMES_CHANGE", removed: [fakeGame], added: [], games: remainingFakes });
+					this.log('debug', 'Dispatched RUNNING_GAMES_CHANGE to clean up fake game');
+				} catch (e) { /* ignore */ }
+			}
+			
+			// Step 3: Clear trackers
 			this._questProgressTracker.delete(questId);
+			this._questErrorTracker.delete(questId);
 			
-			// Step 4: Wait a moment
-			await new Promise(r => setTimeout(r, 2000));
+			// Step 4: Exponential backoff - wait longer on each recovery attempt
+			const backoffDelay = Math.min(3000 * Math.pow(1.5, recoveryCount - 1), 15000);
+			this.log('debug', `Waiting ${backoffDelay}ms before recovery...`);
+			await new Promise(r => setTimeout(r, backoffDelay));
 			
-			// Step 5: Refresh stores
+			// Step 5: Aggressively refresh ALL stores
+			this.ensureStores();
+			await new Promise(r => setTimeout(r, 500));
+			// Double refresh to ensure fresh state
 			this.ensureStores();
 			
-			// Step 6: Wait again
-			await new Promise(r => setTimeout(r, 1000));
+			// Step 6: Wait for stores to settle
+			await new Promise(r => setTimeout(r, 1500));
 			
-			// Step 7: Remove from farming map to allow restart
+			// Step 7: Remove from farming map and stuck set to allow restart
 			this.farmingQuest.delete(questId);
 			this._stuckQuests.delete(questId);
 			
-			// Step 8: Re-fetch quest and restart
+			// Step 8: Re-fetch quest from FRESH store data
 			const store = this.QuestsStore ?? getQuestsStore();
-			const freshQuest = store?.getQuest?.(questId);
+			let freshQuest = null;
+			
+			// Try multiple methods to get the quest
+			if (store) {
+				if (typeof store.getQuest === 'function') freshQuest = store.getQuest(questId);
+				if (!freshQuest && store.quests) {
+					if (typeof store.quests.get === 'function') freshQuest = store.quests.get(questId);
+					else if (typeof store.quests === 'object') freshQuest = store.quests[questId];
+				}
+				if (!freshQuest && typeof store.getAll === 'function') {
+					const all = store.getAll();
+					freshQuest = Array.isArray(all) ? all.find(q => q?.id === questId) : (all || {})[questId];
+				}
+			}
+			
+			// Fallback to our cached available quests
+			if (!freshQuest) freshQuest = quest;
 			
 			if (freshQuest && !freshQuest.userStatus?.completedAt) {
-				this.log('info', `Restarting quest: ${questName}`);
+				const taskConfig = freshQuest?.config?.taskConfigV2 ?? freshQuest?.config?.taskConfig;
+				const taskName = ["WATCH_VIDEO", "PLAY_ON_DESKTOP", "STREAM_ON_DESKTOP", "PLAY_ACTIVITY", "WATCH_VIDEO_ON_MOBILE", "ACHIEVEMENT_IN_ACTIVITY"].find(x => taskConfig?.tasks?.[x] != null);
+				const secondsNeeded = taskConfig?.tasks?.[taskName]?.target ?? 0;
+				const currentProgress = freshQuest.userStatus?.progress?.[taskName]?.value ?? 0;
+				const progressPercent = secondsNeeded > 0 ? (currentProgress / secondsNeeded) * 100 : 0;
 				
-				// Small delay then restart
+				this.log('info', `Quest ${questName} progress: ${Math.round(progressPercent)}% (${currentProgress}/${secondsNeeded})`);
+				
+				// Don't try force-completion - Discord removed those API endpoints (404/400).
+				// Just restart the quest farming and let heartbeats complete it naturally.
+				
+				// Restart the quest farming
+				this.log('info', `Restarting quest: ${questName}`);
+				const restartDelay = 1500 + (recoveryCount * 500);
 				setTimeout(() => {
 					this.farmQuest(freshQuest);
-				}, 1000);
+				}, restartDelay);
 				
 				if (this.settings.questNotifications) {
 					UI.showToast(t('stuckRecoveredContent', { name: questName }), { type: 'success' });
 				}
 			} else {
 				this.log('info', `Quest ${questName} completed or no longer available, skipping restart`);
+				this._questRecoveryAttempts.delete(questId);
 			}
 			
 		} catch (e) {
@@ -2157,6 +2273,7 @@ module.exports = class BasePlugin {
 					await new Promise(resolve => setTimeout(resolve, intervalTime * 1000));
 				} catch (e) {
 					this.log('warn', 'Video progress update error', e.message);
+					this.trackQuestError(quest.id, 'video_progress', e.status);
 					// Continue trying even if one update fails
 					await new Promise(resolve => setTimeout(resolve, intervalTime * 1000));
 				}
@@ -2464,29 +2581,9 @@ module.exports = class BasePlugin {
 				this.log('warn', 'Fallback mutation failed', e.message);
 			}
 
-			try {
-				if (this.api) {
-					const paths = [
-						`/quests/${quest.id}/complete`,
-						`/rewards/quests/${quest.id}/claim`,
-						`/quests/${quest.id}/claim`
-					];
-					for (const p of paths) {
-						try {
-							if (typeof this.api.post === 'function') {
-								await this.api.post(p, {});
-								this.log('debug', 'API POST successful', p);
-								break;
-							}
-							if (typeof this.api.fetch === 'function') {
-								await this.api.fetch(p, { method: 'POST' });
-								this.log('debug', 'API fetch successful', p);
-								break;
-							}
-						} catch (e) { /* ignore individual path errors */ }
-					}
-				}
-			} catch (e) { /* ignore */ }
+			// NOTE: Discord removed /quests/{id}/complete and /quests/{id}/claim endpoints (404/400).
+			// Quest completion happens naturally via heartbeats. Don't call deprecated APIs
+			// that generate errors and trigger false stuck detection.
 
 			// Auto-claim rewards if enabled
 			if (this.settings.autoClaimRewards) {
@@ -2535,7 +2632,7 @@ module.exports = class BasePlugin {
 			const applicationId = quest?.config?.application?.id;
 			const applicationName = quest?.config?.application?.name ?? "Unknown";
 			const questName = quest?.config?.messages?.questName ?? "Unknown Quest";
-			const taskConfig = quest?.config?.taskConfig ?? quest?.config?.taskConfigV2;
+			const taskConfig = quest?.config?.taskConfigV2 ?? quest?.config?.taskConfig;
 			if (!taskConfig || !taskConfig.tasks) {
 				this.log('error', "Invalid taskConfig for quest", { questId: quest?.id });
 				this.farmingQuest.set(quest.id, false);
@@ -2588,10 +2685,10 @@ module.exports = class BasePlugin {
 								processName: appData.name,
 								start: Date.now(),
 							};
-							const realGames = this.fakeGames.size == 0 && this.RunningGameStore?.getRunningGames ? this.RunningGameStore.getRunningGames() : [];
 							this.fakeGames.set(quest.id, fakeGame);
-							const fakeGames = Array.from(this.fakeGames.values());
-							(this.FluxDispatcher ?? FluxDispatcher)?.dispatch({ type: "RUNNING_GAMES_CHANGE", removed: realGames, added: [fakeGame], games: fakeGames });
+							const allFakeGames = Array.from(this.fakeGames.values());
+							// Dispatch like the gist: tell Discord the fake game is now running
+							(this.FluxDispatcher ?? FluxDispatcher)?.dispatch({ type: "RUNNING_GAMES_CHANGE", removed: [], added: [fakeGame], games: allFakeGames });
 
 							let playOnDesktop = (event) => {
 								if (event.questId !== quest.id) return;
@@ -2599,20 +2696,23 @@ module.exports = class BasePlugin {
 								console.log(`Quest progress ${questName}: ${progress}/${secondsNeeded}`);
 								this.trackQuestProgress(quest.id, progress); // Track for stuck detection
 
-								if (!this.farmingQuest.get(quest.id) || progress >= secondsNeeded) {
-									console.log("Stopping farming quest:", questName);
+								if (progress >= secondsNeeded) {
+									console.log("Quest completed!", questName);
 
 									this.fakeGames.delete(quest.id);
-									const games = this.RunningGameStore?.getRunningGames ? this.RunningGameStore.getRunningGames() : [];
-									const added = this.fakeGames.size == 0 ? games : [];
-									(this.FluxDispatcher ?? FluxDispatcher)?.dispatch({ type: "RUNNING_GAMES_CHANGE", removed: [fakeGame], added: added, games: games });
+									const remainingFakes = Array.from(this.fakeGames.values());
+									(this.FluxDispatcher ?? FluxDispatcher)?.dispatch({ type: "RUNNING_GAMES_CHANGE", removed: [fakeGame], added: [], games: remainingFakes });
 									(this.FluxDispatcher ?? FluxDispatcher)?.unsubscribe("QUESTS_SEND_HEARTBEAT_SUCCESS", playOnDesktop);
 
-									if (progress >= secondsNeeded) {
-										console.log("Quest completed!");
-										this.showQuestNotification(quest, true);
-										this.farmingQuest.set(quest.id, false);
-									}
+									this.showQuestNotification(quest, true);
+									this.farmingQuest.set(quest.id, false);
+								} else if (!this.farmingQuest.get(quest.id)) {
+									// Manually stopped
+									console.log("Stopping farming quest (manual):", questName);
+									this.fakeGames.delete(quest.id);
+									const remainingFakes = Array.from(this.fakeGames.values());
+									(this.FluxDispatcher ?? FluxDispatcher)?.dispatch({ type: "RUNNING_GAMES_CHANGE", removed: [fakeGame], added: [], games: remainingFakes });
+									(this.FluxDispatcher ?? FluxDispatcher)?.unsubscribe("QUESTS_SEND_HEARTBEAT_SUCCESS", playOnDesktop);
 								}
 							}
 							(this.FluxDispatcher ?? FluxDispatcher)?.subscribe("QUESTS_SEND_HEARTBEAT_SUCCESS", playOnDesktop);
@@ -2624,19 +2724,27 @@ module.exports = class BasePlugin {
 								if (fallbackInterval) return;
 								fallbackInterval = this._registerInterval(setInterval(async () => {
 									try {
-										if (!this.farmingQuest.get(quest.id)) return;
+										if (!this.farmingQuest.get(quest.id)) {
+											// Quest was stopped externally, clean up fallback
+											if (fallbackInterval) { this._clearInterval(fallbackInterval); fallbackInterval = null; }
+											return;
+										}
 										this.ensureStores();
 										const qs = this.QuestsStore ?? getQuestsStore();
-										if (qs && typeof qs.submitQuestProgress === 'function') {
-											await qs.submitQuestProgress(quest.id, { progress: 1 });
-										} else if (qs && typeof qs.enroll === 'function') {
-											await qs.enroll(quest.id).catch(()=>{});
-										} else if (this.api ?? api) {
+										let heartbeatSuccess = false;
+										
+										// Try heartbeat via API (like the gist does)
+										if (this.api ?? api) {
 											try {
 												await (this.api ?? api).post({ url: `/quests/${quest.id}/heartbeat`, body: {} });
-											} catch(e){ /* ignore */ }
+												heartbeatSuccess = true;
+											} catch(e){
+												this.trackQuestError(quest.id, 'heartbeat', e.status);
+											}
 										}
+										if (heartbeatSuccess) this._questErrorTracker.delete(quest.id);
 
+										// Get current progress from store
 										let current = quest.userStatus?.progress?.PLAY_ON_DESKTOP?.value ?? quest.userStatus?.streamProgressSeconds ?? 0;
 										if (qs) {
 											try {
@@ -2651,29 +2759,29 @@ module.exports = class BasePlugin {
 										}
 
 										fallbackAttempts++;
+										this.trackQuestProgress(quest.id, current);
 
-										const nearComplete = current >= Math.floor(secondsNeeded * 0.9);
-										const maxFallback = Math.max(1, Number(this.settings.maxFallbackAttempts ?? getSetting('maxFallbackAttempts')?.value ?? 30));
-										const exhausted = fallbackAttempts >= maxFallback;
-
-										if (current >= secondsNeeded || nearComplete || exhausted) {
-											if (!(current >= secondsNeeded)) {
-												console.log('Attempting forced completion via store/api for', quest.id);
-												try { await this.completeWithoutWatch(quest); } catch(e) { /* ignore */ }
-											}
-
+										// ONLY stop when quest is ACTUALLY complete (100%) - never stop early!
+										// The gist waits for full completion, not 90%
+										if (current >= secondsNeeded) {
+											console.log('Quest completed via fallback!', quest.id);
 											if (fallbackInterval) {
 												this._clearInterval(fallbackInterval);
 												fallbackInterval = null;
 											}
-
-											if (this.fakeGames.has(quest.id)) this.fakeGames.delete(quest.id);
-											const games = this.RunningGameStore?.getRunningGames ? this.RunningGameStore.getRunningGames() : [];
-											const added = this.fakeGames.size == 0 ? games : [];
-											(this.FluxDispatcher ?? FluxDispatcher)?.dispatch({ type: "RUNNING_GAMES_CHANGE", removed: [fakeGame], added: added, games: games });
+											this.fakeGames.delete(quest.id);
+											const remainingFakes = Array.from(this.fakeGames.values());
+											(this.FluxDispatcher ?? FluxDispatcher)?.dispatch({ type: "RUNNING_GAMES_CHANGE", removed: [fakeGame], added: [], games: remainingFakes });
 											(this.FluxDispatcher ?? FluxDispatcher)?.unsubscribe("QUESTS_SEND_HEARTBEAT_SUCCESS", playOnDesktop);
+											this.showQuestNotification(quest, true);
 											this.farmingQuest.set(quest.id, false);
 											return;
+										}
+										
+										// Re-dispatch fake game periodically to keep Discord's heartbeat alive
+										if (fallbackAttempts % 5 === 0 && this.fakeGames.has(quest.id)) {
+											const allFakes = Array.from(this.fakeGames.values());
+											(this.FluxDispatcher ?? FluxDispatcher)?.dispatch({ type: "RUNNING_GAMES_CHANGE", removed: [], added: [], games: allFakes });
 										}
 									} catch (e) { /* ignore */ }
 								}, 20 * 1000));
@@ -2686,10 +2794,10 @@ module.exports = class BasePlugin {
 					break;
 
 				case "STREAM_ON_DESKTOP":
+					// Match gist's metadata format exactly
 					const fakeApp = {
 						id: applicationId,
-						name: `FakeApp ${applicationName} (FarmQuests)`,
-						pid: pid,
+						pid,
 						sourceName: null,
 					};
 					this.fakeApplications.set(quest.id, fakeApp);
@@ -2700,17 +2808,17 @@ module.exports = class BasePlugin {
 						console.log(`Quest progress ${questName}: ${progress}/${secondsNeeded}`);
 						this.trackQuestProgress(quest.id, progress); // Track for stuck detection
 
-						if (!this.farmingQuest.get(quest.id) || progress >= secondsNeeded) {
-							console.log("Stopping farming quest:", questName);
-
+						if (progress >= secondsNeeded) {
+							console.log("Quest completed!", questName);
 							this.fakeApplications.delete(quest.id);
 							(this.FluxDispatcher ?? FluxDispatcher)?.unsubscribe("QUESTS_SEND_HEARTBEAT_SUCCESS", streamOnDesktop);
-
-							if (progress >= secondsNeeded) {
-								console.log("Quest completed!");
-								this.showQuestNotification(quest, true);
-								this.farmingQuest.set(quest.id, false);
-							}
+							this.showQuestNotification(quest, true);
+							this.farmingQuest.set(quest.id, false);
+						} else if (!this.farmingQuest.get(quest.id)) {
+							// Manually stopped
+							console.log("Stopping farming quest (manual):", questName);
+							this.fakeApplications.delete(quest.id);
+							(this.FluxDispatcher ?? FluxDispatcher)?.unsubscribe("QUESTS_SEND_HEARTBEAT_SUCCESS", streamOnDesktop);
 						}
 					}
 					(this.FluxDispatcher ?? FluxDispatcher)?.subscribe("QUESTS_SEND_HEARTBEAT_SUCCESS", streamOnDesktop);
@@ -2751,23 +2859,30 @@ module.exports = class BasePlugin {
 						console.log("Completing quest", questName, "-", quest.config.messages.questName);
 
 						while (true) {
-							const res = await (this.api ?? api)?.post({ url: `/quests/${quest.id}/heartbeat`, body: { stream_key: streamKey, terminal: false } });
-							const progress = res.body.progress.PLAY_ACTIVITY.value;
-							console.log(`Quest progress ${questName}: ${progress}/${secondsNeeded}`);
-							this.trackQuestProgress(quest.id, progress); // Track for stuck detection
+							try {
+								const res = await (this.api ?? api)?.post({ url: `/quests/${quest.id}/heartbeat`, body: { stream_key: streamKey, terminal: false } });
+								const progress = res.body.progress.PLAY_ACTIVITY.value;
+								console.log(`Quest progress ${questName}: ${progress}/${secondsNeeded}`);
+								this.trackQuestProgress(quest.id, progress); // Track for stuck detection
 
-							await new Promise(resolve => setTimeout(resolve, 20 * 1000));
+								await new Promise(resolve => setTimeout(resolve, 20 * 1000));
 
-							if (!this.farmingQuest.get(quest.id) || progress >= secondsNeeded) {
-								console.log("Stopping farming quest:", questName);
+								if (!this.farmingQuest.get(quest.id) || progress >= secondsNeeded) {
+									console.log("Stopping farming quest:", questName);
 
-								if (progress >= secondsNeeded) {
-									await (this.api ?? api)?.post({ url: `/quests/${quest.id}/heartbeat`, body: { stream_key: streamKey, terminal: true } });
-									console.log("Quest completed!")
-									this.showQuestNotification(quest, true);
-									this.farmingQuest.set(quest.id, false);
+									if (progress >= secondsNeeded) {
+										await (this.api ?? api)?.post({ url: `/quests/${quest.id}/heartbeat`, body: { stream_key: streamKey, terminal: true } });
+										console.log("Quest completed!")
+										this.showQuestNotification(quest, true);
+										this.farmingQuest.set(quest.id, false);
+									}
+									break;
 								}
-								break;
+							} catch (e) {
+								this.trackQuestError(quest.id, 'play_activity_heartbeat', e.status);
+								this.log('warn', `PLAY_ACTIVITY heartbeat error for ${questName}:`, e.message);
+								await new Promise(resolve => setTimeout(resolve, 20 * 1000));
+								if (!this.farmingQuest.get(quest.id)) break;
 							}
 						}
 					}
@@ -2810,6 +2925,24 @@ module.exports = class BasePlugin {
 		} catch (err) {
 			console.error("FarmQuests: error inside farmQuest", err);
 			if (quest?.id) this.farmingQuest.set(quest.id, false);
+			try {
+				UI.showConfirmationModal("Error", [
+					"An error occurred while trying to complete the quest. Please reach out to developer with the following information:",
+					`Quest Name: ${quest?.config?.application?.name ?? 'Unknown'}`,
+					`Error: ${err.message}`,
+					`Or click to send report to create an issue on github`
+				], {
+					confirmText: "Report Issue",
+					onConfirm: () => {
+						const issueTitle = encodeURIComponent(`Error while completing quest: ${quest?.config?.application?.name ?? 'Unknown'}`);
+						const issueBody = encodeURIComponent(`**Quest Name:** ${quest?.config?.application?.name ?? 'Unknown'}\n**Error:** ${err.message}\n**Stack Trace:**\n\`\`\`${err.stack}\`\`\``);
+						const issueUrl = `https://github.com/Sophan-Developer/FarmQuests/issues/new?title=${issueTitle}&body=${issueBody}`;
+						open(issueUrl);
+					}
+				});
+			} catch (modalErr) {
+				this.log('warn', 'Failed to show error reporting modal', modalErr.message);
+			}
 		}
 	}
 }
